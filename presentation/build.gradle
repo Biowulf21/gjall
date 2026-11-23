@@ -29,8 +29,8 @@ android {
         resValue("string", "application_id", applicationId)
         minSdkVersion 23
         targetSdkVersion 33
-        versionCode 2239
-        versionName '4.3.7'
+        versionCode 2240
+        versionName '4.3.8'
         setProperty("archivesBaseName", "QUIK-v${versionName}")
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }

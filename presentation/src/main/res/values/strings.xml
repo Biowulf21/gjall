@@ -331,7 +331,7 @@
     <string name="settings_diable_screenshots_summary">Prevent your OS and other apps from taking screenshots of the app.</string>
     <string name="settings_sync_title">Sync messages</string>
     <string name="settings_sync_summary">Re-sync your messages with the native Android SMS database</string>
-    <string name="settings_about_title">About QUIK</string>
+    <string name="settings_about_title">About</string>
     <string name="settings_version">Version %s</string>
     <string name="settings_logging_enabled">Debug logging enabled</string>
     <string name="settings_logging_disabled">Debug logging disabled</string>
@@ -421,7 +421,7 @@
     <string name="theme_apply">Apply</string>
 
     <string name="about_developer">A team of wonderful people from around the world!</string>
-    <string name="about_source" translatable="false">https://github.com/quik-sms/quik</string>
+    <string name="about_source" translatable="false">https://github.com/Biowulf21/gjall-android</string>
     <string name="about_changelog" translatable="false">https://github.com/quik-sms/quik/releases</string>
     <string name="about_contact" translatable="false">quik@octo.sh</string>
     <string name="about_license" translatable="false">GNU General Public License v3.0</string>
@@ -565,4 +565,5 @@
     <string name="stt_toast_extra_prompt">Speak your message</string>
 
     <string name="messages_text_share_file_error">Oops! Something went wrong while sharing</string>
+    <string name="about_donate">Support Gjall</string>
 </resources>

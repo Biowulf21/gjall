@@ -69,6 +69,12 @@
             app:title="@string/about_contact_title" />
 
         <dev.octoshrimpy.quik.common.widget.PreferenceView
+            android:id="@+id/donate"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:title="@string/about_donate" />
+
+        <dev.octoshrimpy.quik.common.widget.PreferenceView
             android:id="@+id/license"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

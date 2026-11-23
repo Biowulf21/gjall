@@ -47,12 +47,12 @@ class ExternalNavigator @Inject constructor(
     fun showDeveloper() =
         openExternalActivity("https://github.com/quik-sms/quik/graphs/contributors")
 
-    fun showSourceCode() = openExternalActivity("https://github.com/quik-sms/quik")
+    fun showSourceCode() = openExternalActivity("https://github.com/Biowulf21/gjall-android")
 
     fun showChangelog() = openExternalActivity("https://github.com/quik-sms/quik/releases")
 
     fun showLicense() =
-        openExternalActivity("https://github.com/quik-sms/quik/blob/master/LICENSE")
+        openExternalActivity("https://github.com/Biowulf21/gjall-android/blob/main/LICENSE")
 
     fun makePhoneCall(address: String) {
         val action = if (permissions.hasCalling()) Intent.ACTION_CALL else Intent.ACTION_DIAL
@@ -60,7 +60,7 @@ class ExternalNavigator @Inject constructor(
         startActivityExternal(intent)
     }
 
-    fun showDonation() = openExternalActivity("https://github.com/quik-sms/quik")
+    fun showDonation() = openExternalActivity("https://buymeacoffee.com/biowulf21")
 
     fun showRating() {
         val intent = Intent(Intent.ACTION_VIEW, "https://github.com/quik-sms/quik".toUri())

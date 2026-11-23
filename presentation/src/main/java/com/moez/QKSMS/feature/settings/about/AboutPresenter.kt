@@ -44,6 +44,8 @@ class AboutPresenter @Inject constructor(
 
                         R.id.contact -> externalNavigator.showSupport()
 
+                        R.id.donate -> externalNavigator.showDonation()
+
                         R.id.license -> externalNavigator.showLicense()
                     }
                 }
