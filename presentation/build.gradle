@@ -31,7 +31,7 @@ android {
         targetSdkVersion 33
         versionCode 2239
         versionName '4.3.7'
-        setProperty("archivesBaseName", "Gjall-v${versionName}")
+        setProperty("archivesBaseName", "QUIK-v${versionName}")
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
