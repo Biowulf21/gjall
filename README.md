@@ -1,12 +1,12 @@
 ![octoshrimpy/QUIK](.github/octoshrimpy_quik.jpg)
 
-# QUIK
+# Gjall
 
 [![Manual Release](https://github.com/octoshrimpy/quik/actions/workflows/manual-release.yml/badge.svg)](https://github.com/octoshrimpy/quik/actions/workflows/manual-release.yml)
 <a href="https://hosted.weblate.org/engage/quik/"><img src="https://hosted.weblate.org/widget/quik/svg-badge.svg" alt="Translation status" /></a>
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/octoshrimpy/quik)
 
-QUIK is an open source replacement to the [stock messaging app](https://github.com/android/platform_packages_apps_mms) on Android. It is a continuation of [QKSMS](https://github.com/moezbhatti/qksms). 
+Gjall is an open-source Android messaging app based on [QUIK](https://github.com/quik-sms/quik), a continuation of [QKSMS](https://github.com/moezbhatti/qksms). It appears as **Messages** in the launcher.
 
 ## Features
 
