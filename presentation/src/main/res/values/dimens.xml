@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Heimdall layout tokens (chooloolib ui/theme/Dimens.kt) -->
+<resources>
+    <dimen name="page_inset">12dp</dimen>
+    <dimen name="avatar_small">44dp</dimen>
+    <dimen name="list_row">64dp</dimen>
+    <dimen name="row_radius">20dp</dimen>
+</resources>

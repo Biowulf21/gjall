@@ -44,6 +44,7 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.SeekBar
 import android.widget.Toast
+import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
@@ -220,6 +221,18 @@ class ComposeActivity : QkThemedActivity(), ComposeView {
         binding = ComposeActivityBinding.inflate(layoutInflater)
         setContentView(binding.root)
         showBackButton(true)
+        if (expressive) {
+            // Floating composer (no divider); send is a plain filled circle, the attach menu uses the
+            // stock circle backgrounds from the layout (cookie shape is reserved for one hero action)
+            binding.send.setBackgroundResource(R.drawable.circle)
+            listOf(binding.send, binding.attach).forEach { v ->
+                val a = v.context.obtainStyledAttributes(intArrayOf(android.R.attr.selectableItemBackgroundBorderless))
+                v.foreground = a.getDrawable(0)
+                a.recycle()
+            }
+            binding.composeDivider.visibility = View.GONE
+            binding.toolbar.setTag(R.id.expressive_keep_title, true) // contact name stays its normal size
+        }
         viewModel.bindView(this)
 
         binding.contentView.layoutTransition = LayoutTransition().apply {
@@ -227,7 +240,13 @@ class ComposeActivity : QkThemedActivity(), ComposeView {
         }
             chipsAdapter.view = binding.chips
 
-            binding.chips.itemAnimator = null
+            // Picked contacts fade in/out instead of popping; no change animation to avoid Flexbox relayout flicker
+            binding.chips.itemAnimator = DefaultItemAnimator().apply {
+                addDuration = 150
+                removeDuration = 120
+                changeDuration = 0
+                moveDuration = 150
+            }
             binding.chips.layoutManager = FlexboxLayoutManager(this)
 
             messageAdapter.autoScrollToStart(binding.messageList)
@@ -246,6 +265,7 @@ class ComposeActivity : QkThemedActivity(), ComposeView {
 
                     // entire attach menu
                     binding.attach.setBackgroundTint(it.theme); binding.attach.setTint(it.textPrimary)
+                    if (expressive) { binding.send.setBackgroundTint(it.theme); binding.send.setTint(it.textPrimary) }
                     binding.contact.setBackgroundTint(it.theme); binding.contact.setTint(it.textPrimary)
                     binding.contactLabel.setBackgroundTint(it.theme); binding.contactLabel.setTint(it.textPrimary)
                     binding.schedule.setBackgroundTint(it.theme); binding.schedule.setTint(it.textPrimary)

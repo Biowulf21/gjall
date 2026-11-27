@@ -21,6 +21,8 @@ package dev.octoshrimpy.quik.common.util.extensions
 import android.animation.LayoutTransition
 import android.content.Context
 import android.content.res.ColorStateList
+import android.graphics.drawable.GradientDrawable
+import androidx.core.graphics.ColorUtils
 import android.view.GestureDetector
 import android.view.GestureDetector.SimpleOnGestureListener
 import android.view.MotionEvent
@@ -33,6 +35,8 @@ import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.snackbar.Snackbar
+import dev.octoshrimpy.quik.R
 import androidx.viewpager.widget.ViewPager
 
 var ViewGroup.animateLayoutChanges: Boolean
@@ -166,4 +170,26 @@ fun ViewPager.addOnPageChangeListener(listener: (Int) -> Unit) {
 fun RecyclerView.scrapViews() {
     recycledViewPool.clear()
     adapter?.notifyDataSetChanged()
+}
+
+/** Heimdall-style floating snackbar: inset, 16dp corners, raised surface, accent action. */
+/** [endInsetDp] keeps it clear of a FAB in the bottom-end corner. */
+fun Snackbar.heimdallStyle(accent: Int, endInsetDp: Int = 12): Snackbar {
+    val context = view.context
+    val density = context.resources.displayMetrics.density
+    val surface = context.resolveThemeColor(R.attr.surfaceContainerHigh)
+    view.background = GradientDrawable().apply {
+        cornerRadius = 16 * density
+        setColor(surface)
+    }
+    (view.layoutParams as? ViewGroup.MarginLayoutParams)?.let { params ->
+        val margin = (12 * density).toInt()
+        params.setMargins(margin, margin, (endInsetDp * density).toInt(), margin)
+        view.layoutParams = params
+    }
+    // Material 1.0.0 hardcodes white snackbar text; pick ink from the surface we just set
+    val ink = context.getColor(if (ColorUtils.calculateLuminance(surface) > 0.5) R.color.textPrimary else R.color.textPrimaryDark)
+    view.findViewById<TextView>(com.google.android.material.R.id.snackbar_text)?.setTextColor(ink)
+    setActionTextColor(accent)
+    return this
 }

@@ -22,13 +22,21 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
-import android.graphics.Rect
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffColorFilter
+import android.graphics.Color
+import android.graphics.RectF
+import android.os.Build
+import android.os.SystemClock
+import android.view.HapticFeedbackConstants
+import androidx.core.graphics.ColorUtils
 import androidx.core.graphics.drawable.toBitmap
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import dev.octoshrimpy.quik.R
 import dev.octoshrimpy.quik.common.util.Colors
 import dev.octoshrimpy.quik.common.util.extensions.dpToPx
+import dev.octoshrimpy.quik.common.util.extensions.resolveThemeColor
 import dev.octoshrimpy.quik.util.Preferences
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.Observables
@@ -37,7 +45,7 @@ import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.PublishSubject
 import io.reactivex.subjects.Subject
 import javax.inject.Inject
-import kotlin.math.max
+import kotlin.math.abs
 import kotlin.math.min
 
 class ConversationItemTouchCallback @Inject constructor(
@@ -61,10 +69,16 @@ class ConversationItemTouchCallback @Inject constructor(
     private var swipeLeftIcon: Bitmap? = null
 
     private val iconLength = 24.dpToPx(context)
+    private val iconPaint = Paint(Paint.FILTER_BITMAP_FLAG)
+    private val deleteColor = context.getColor(R.color.swipeDelete)
+    private val rect = RectF()
+    private var themeColor = 0
+    private var armed = false
+    private var armedAt = 0L
 
     init {
         disposables += colors.themeObservable()
-                .doOnNext { theme -> backgroundPaint.color = theme.theme }
+                .doOnNext { theme -> themeColor = theme.theme }
                 .subscribeOn(Schedulers.io())
                 .subscribe()
 
@@ -72,9 +86,9 @@ class ConversationItemTouchCallback @Inject constructor(
                 .combineLatest(prefs.swipeRight.asObservable(), prefs.swipeLeft.asObservable(), colors.themeObservable()
                 ) { right, left, theme ->
                     rightAction = right
-                    swipeRightIcon = iconForAction(right, theme.textPrimary)
+                    swipeRightIcon = iconForAction(right, Color.WHITE)
                     leftAction = left
-                    swipeLeftIcon = iconForAction(left, theme.textPrimary)
+                    swipeLeftIcon = iconForAction(left, Color.WHITE)
                     setDefaultSwipeDirs((if (right == Preferences.SWIPE_ACTION_NONE) 0 else ItemTouchHelper.RIGHT)
                             or (if (left == Preferences.SWIPE_ACTION_NONE) 0 else ItemTouchHelper.LEFT))
                 }
@@ -90,6 +104,11 @@ class ConversationItemTouchCallback @Inject constructor(
         return false
     }
 
+    /**
+     * Google Messages-style swipe: a flat, full-width tonal colour fills the space the row leaves
+     * behind, with the action icon pinned near the edge. The icon fades in with the drag and pops
+     * (0.85 to 1.0) with a haptic tick when the release would commit.
+     */
     override fun onChildDraw(
         c: Canvas,
         recyclerView: RecyclerView,
@@ -101,33 +120,62 @@ class ConversationItemTouchCallback @Inject constructor(
     ) {
         if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
             val itemView = viewHolder.itemView
+            val threshold = getSwipeThreshold(viewHolder) * itemView.width
+            val action = if (dX > 0) rightAction else leftAction
 
-            if (dX > 0) {
-                c.drawRect(itemView.left.toFloat(), itemView.top.toFloat(),
-                        dX, itemView.bottom.toFloat(), backgroundPaint)
+            val armed = abs(dX) >= threshold
+            if (isCurrentlyActive && armed != this.armed && dX != 0f) {
+                this.armed = armed
+                armedAt = SystemClock.uptimeMillis()
+                itemView.performHapticFeedback(when {
+                    Build.VERSION.SDK_INT >= 34 && armed -> HapticFeedbackConstants.GESTURE_THRESHOLD_ACTIVATE
+                    Build.VERSION.SDK_INT >= 34 -> HapticFeedbackConstants.GESTURE_THRESHOLD_DEACTIVATE
+                    armed -> HapticFeedbackConstants.CONTEXT_CLICK
+                    else -> HapticFeedbackConstants.CLOCK_TICK
+                })
+            }
+            if (dX == 0f) this.armed = false
 
-                swipeRightIcon?.let { icon ->
-                    val availablePx = dX.toInt() - iconLength
-                    if (availablePx > 0) {
-                        val src = Rect(0, 0, min(availablePx, icon.width), icon.height)
-                        val dstTop = itemView.top + (itemView.bottom - itemView.top - icon.height) / 2
-                        val dst = Rect(iconLength, dstTop, iconLength + src.width(), dstTop + src.height())
-                        c.drawBitmap(icon, src, dst, null)
-                    }
+            if (dX != 0f) {
+                val context = itemView.context
+                val isDelete = action == Preferences.SWIPE_ACTION_DELETE
+                // Colour tracks the finger 1:1 (no easing on a tracked value). p² keeps it muted early
+                // and saturates right at the commit point; past the threshold it stays fully saturated.
+                val progress = min(1f, abs(dX) / threshold)
+                val ramp = progress * progress
+                val muted = context.resolveThemeColor(R.attr.surfaceContainerHigh)
+                val full = if (isDelete) deleteColor else themeColor
+                backgroundPaint.color = ColorUtils.blendARGB(muted, full, ramp)
+                val mutedIcon = context.resolveThemeColor(android.R.attr.textColorSecondary)
+                // Icon goes white twice as fast so it never sits grey-on-red mid-drag
+                val iconColor = ColorUtils.blendARGB(mutedIcon, Color.WHITE, min(1f, ramp * 2f))
+
+                // Edge to edge, ignoring the row's own inset, like Google Messages
+                if (dX > 0) {
+                    rect.set(0f, itemView.top.toFloat(), itemView.left + dX, itemView.bottom.toFloat())
+                } else {
+                    rect.set(itemView.right + dX, itemView.top.toFloat(), recyclerView.width.toFloat(), itemView.bottom.toFloat())
                 }
-            } else if (dX < 0) {
-                c.drawRect(itemView.right.toFloat() + dX, itemView.top.toFloat(),
-                        itemView.right.toFloat(), itemView.bottom.toFloat(), backgroundPaint)
+                c.drawRect(rect, backgroundPaint)
 
-                swipeLeftIcon?.let { icon ->
-                    val availablePx = -dX.toInt() - iconLength
-                    if (availablePx > 0) {
-                        val src = Rect(max(0, icon.width - availablePx), 0, icon.width, icon.height)
-                        val dstTop = itemView.top + (itemView.bottom - itemView.top - icon.height) / 2
-                        val dst = Rect(itemView.right - iconLength - src.width(), dstTop,
-                                itemView.right - iconLength, dstTop + src.height())
-                        c.drawBitmap(icon, src, dst, null)
-                    }
+                val icon = if (dX > 0) swipeRightIcon else swipeLeftIcon
+                if (icon != null) {
+                    // Icon eases between 0.85 and 1.0 over 120ms whenever the armed state flips
+                    val t = min(1f, (SystemClock.uptimeMillis() - armedAt) / 120f)
+                    val eased = 1f - (1f - t) * (1f - t)
+                    val scale = if (this.armed) 0.85f + 0.15f * eased else 1f - 0.15f * eased
+                    if (t < 1f) recyclerView.postInvalidateOnAnimation()
+
+                    val edge = iconLength.toFloat() // 24dp from the screen edge to the icon
+                    val cx = if (dX > 0) edge + iconLength / 2f else recyclerView.width - edge - iconLength / 2f
+                    val cy = (itemView.top + itemView.bottom) / 2f
+                    iconPaint.colorFilter = PorterDuffColorFilter(iconColor, PorterDuff.Mode.SRC_IN)
+                    iconPaint.alpha = (min(1f, abs(dX) / (edge * 2 + iconLength)) * 255).toInt()
+                    c.save()
+                    c.clipRect(rect)
+                    c.scale(scale, scale, cx, cy)
+                    c.drawBitmap(icon, cx - icon.width / 2f, cy - icon.height / 2f, iconPaint)
+                    c.restore()
                 }
             }
 
@@ -140,7 +188,7 @@ class ConversationItemTouchCallback @Inject constructor(
 
         // This will trigger the animation back to neutral state
         val action = if (direction == ItemTouchHelper.RIGHT) rightAction else leftAction
-        if (action != Preferences.SWIPE_ACTION_ARCHIVE) {
+        if (action != Preferences.SWIPE_ACTION_ARCHIVE && action != Preferences.SWIPE_ACTION_DELETE) {
             adapter?.notifyItemChanged(viewHolder.adapterPosition)
         }
     }

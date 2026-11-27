@@ -24,28 +24,36 @@
     <color name="rippleLight">#1f000000</color>
     <color name="rippleDark">#33ffffff</color>
 
-    <color name="toolbarLight">#FFFFFF</color>
-    <color name="toolbarDark">#1d262b</color>
+    <color name="toolbarLight">#F8FAFC</color>
+    <color name="toolbarDark">#171E24</color>
     <color name="toolbarTranslucent">#88000000</color>
 
-    <color name="backgroundLight">#FFFFFF</color>
-    <color name="backgroundDark">#192025</color>
+    <color name="backgroundLight">#F8FAFC</color>
+    <color name="backgroundDark">#171E24</color>
 
-    <color name="textPrimary">#49555F</color>
-    <color name="textPrimaryDisabled">#4C49555F</color>
-    <color name="textSecondary">#70808D</color>
-    <color name="textSecondaryDisabled">#4C70808D</color>
+    <color name="textPrimary">#17212B</color>
+    <color name="textPrimaryDisabled">#4C17212B</color>
+    <color name="textSecondary">#495B6C</color>
+    <color name="textSecondaryDisabled">#4C495B6C</color>
     <color name="textTertiary">#B7B9C0</color>
 
-    <color name="textPrimaryDark">#FFFFFFFF</color>
+    <color name="textPrimaryDark">#FFEAF1F8</color>
     <color name="textPrimaryDisabledDark">#7FFFFFFF</color>
-    <color name="textSecondaryDark">#ccffffff</color>
+    <color name="textSecondaryDark">#FFB7C5D3</color>
     <color name="textSecondaryDisabledDark">#67ffffff</color>
     <color name="textTertiaryDark">#80ffffff</color>
 
     <color name="bubbleLight">#ECEFF1</color>
     <color name="bubbleDark">#11171B</color>
     <color name="bubbleBlack">#0F1113</color>
+
+    <!-- Heimdall surface tokens -->
+    <color name="surfaceContainerHighLight">#DFE8F1</color>
+    <color name="surfaceContainerHighDark">#2C3843</color>
+    <color name="surfaceContainerHighBlack">#1C1F22</color>
+    <!-- Fully committed swipe-to-delete (Google red) -->
+    <color name="swipeDelete">#D93025</color>
+
 
     <color name="separatorLight">#0C000000</color>
     <color name="separatorDark">#1AFFFFFF</color>

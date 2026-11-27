@@ -66,6 +66,8 @@ class SettingsController : QkController<SettingsControllerBinding, SettingsView,
     @Inject lateinit var colors: Colors
     @Inject lateinit var nightModeDialog: QkDialog
     @Inject lateinit var textSizeDialog: QkDialog
+    @Inject lateinit var designStyleDialog: QkDialog
+    @Inject lateinit var appNameDialog: QkDialog
     @Inject lateinit var sendDelayDialog: QkDialog
     @Inject lateinit var mmsSizeDialog: QkDialog
     @Inject lateinit var messageLinkHandlingDialog: QkDialog
@@ -101,6 +103,9 @@ class SettingsController : QkController<SettingsControllerBinding, SettingsView,
                     .drop(1)
         }
         textSizeDialog.adapter.setData(R.array.text_sizes)
+        designStyleDialog.adapter.setData(R.array.design_styles)
+        appNameDialog.adapter.setData(R.array.app_names)
+        appNameDialog.setTitle(R.string.settings_app_name_dialog_title)
         sendDelayDialog.adapter.setData(R.array.delayed_sending_labels)
         mmsSizeDialog.adapter.setData(R.array.mms_sizes, R.array.mms_sizes_ids)
         messageLinkHandlingDialog.adapter.setData(R.array.messageLinkHandlings, R.array.messageLinkHandling_ids)
@@ -130,6 +135,10 @@ class SettingsController : QkController<SettingsControllerBinding, SettingsView,
     override fun nightEndSelected(): Observable<Pair<Int, Int>> = endTimeSelectedSubject
 
     override fun textSizeSelected(): Observable<Int> = textSizeDialog.adapter.menuItemClicks
+
+    override fun designStyleSelected(): Observable<Int> = designStyleDialog.adapter.menuItemClicks
+
+    override fun appNameSelected(): Observable<Int> = appNameDialog.adapter.menuItemClicks
 
     override fun sendDelaySelected(): Observable<Int> = sendDelayDialog.adapter.menuItemClicks
 
@@ -162,6 +171,12 @@ class SettingsController : QkController<SettingsControllerBinding, SettingsView,
 
         binding.signature.summary = state.signature.takeIf { it.isNotBlank() }
                 ?: context.getString(R.string.settings_signature_summary)
+
+        binding.designStyle.summary = state.designStyleSummary
+        designStyleDialog.adapter.selectedItem = state.designStyleId
+
+        binding.appName.summary = state.appNameSummary
+        appNameDialog.adapter.selectedItem = if (state.brandLauncherName) 1 else 0
 
         binding.textSize.summary = state.textSizeSummary
         textSizeDialog.adapter.selectedItem = state.textSizeId
@@ -220,6 +235,10 @@ class SettingsController : QkController<SettingsControllerBinding, SettingsView,
     }
 
     override fun showTextSizePicker() = textSizeDialog.show(activity!!)
+
+    override fun showDesignStylePicker() = designStyleDialog.show(activity!!)
+
+    override fun showAppNamePicker() = appNameDialog.show(activity!!)
 
     override fun showDelayDurationDialog() = sendDelayDialog.show(activity!!)
 

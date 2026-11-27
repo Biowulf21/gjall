@@ -21,11 +21,14 @@ package dev.octoshrimpy.quik.common
 import android.animation.Animator
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
+import android.animation.ValueAnimator
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.DecelerateInterpolator
+import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import com.bluelinelabs.conductor.ControllerChangeHandler
 import com.bluelinelabs.conductor.changehandler.AnimatorChangeHandler
+import dev.octoshrimpy.quik.common.base.QkThemedActivity
 import dev.octoshrimpy.quik.common.util.extensions.dpToPx
 
 class QkChangeHandler : AnimatorChangeHandler(250, true) {
@@ -37,6 +40,8 @@ class QkChangeHandler : AnimatorChangeHandler(250, true) {
         isPush: Boolean,
         toAddedToContainer: Boolean
     ): Animator {
+        if ((container.context as? QkThemedActivity)?.expressive == true) return fadeThrough(from, to)
+
         val animatorSet = AnimatorSet()
         animatorSet.interpolator = DecelerateInterpolator()
 
@@ -63,9 +68,27 @@ class QkChangeHandler : AnimatorChangeHandler(250, true) {
         return animatorSet
     }
 
+    /** Material fade-through: old screen fades out over the first 35%, new one fades in from 92% scale */
+    private fun fadeThrough(from: View?, to: View?): Animator {
+        val easing = FastOutSlowInInterpolator()
+        return ValueAnimator.ofFloat(0f, 1f).apply {
+            addUpdateListener {
+                val t = it.animatedFraction
+                val incoming = easing.getInterpolation(((t - 0.35f) / 0.65f).coerceIn(0f, 1f))
+                from?.alpha = 1f - (t / 0.35f).coerceAtMost(1f)
+                to?.alpha = incoming
+                to?.scaleX = 0.92f + 0.08f * incoming
+                to?.scaleY = to?.scaleX ?: 1f
+            }
+        }
+    }
+
     override fun resetFromView(from: View) {
         from.translationX = 0f
         from.translationZ = 0f
+        from.alpha = 1f
+        from.scaleX = 1f
+        from.scaleY = 1f
     }
 
     override fun copy(): ControllerChangeHandler {

@@ -23,14 +23,17 @@
     <item android:id="@android:id/mask">
         <shape android:shape="rectangle">
             <solid android:color="@color/white" />
-            <corners android:radius="2dp" />
+            <corners android:radius="@dimen/row_radius" />
         </shape>
     </item>
 
     <item>
         <selector>
             <item android:state_activated="true">
-                <color android:color="@color/separatorDark" />
+                <shape android:shape="rectangle">
+                    <solid android:color="@color/separatorDark" />
+                    <corners android:radius="@dimen/row_radius" />
+                </shape>
             </item>
 
             <item>

@@ -565,7 +565,13 @@ class ConversationRepositoryImpl @Inject constructor(
                     if (recipients.size <= 1) false
                     else sendAsGroup
             }
-            realm.executeTransaction { it.copyToRealmOrUpdate(conversation) }
+            realm.executeTransaction {
+                // id is the primary key, so each needs its own or they overwrite each other.
+                // Negative ids can't collide with the provider's; 0 is also the global theme key.
+                var lastId = minOf(it.where(Recipient::class.java).min("id")?.toLong() ?: 0L, 0L)
+                matchedRecipients.forEach { recipient -> recipient.id = --lastId }
+                it.copyToRealmOrUpdate(conversation)
+            }
             return conversation
         }
     }

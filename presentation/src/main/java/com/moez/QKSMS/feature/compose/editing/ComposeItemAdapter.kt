@@ -27,7 +27,7 @@ import dev.octoshrimpy.quik.common.base.QkAdapter
 import dev.octoshrimpy.quik.common.base.QkBindingViewHolder
 import dev.octoshrimpy.quik.common.util.Colors
 import dev.octoshrimpy.quik.common.util.extensions.forwardTouches
-import dev.octoshrimpy.quik.common.util.extensions.setTint
+import dev.octoshrimpy.quik.common.widget.contactSection
 import dev.octoshrimpy.quik.extensions.associateByNotNull
 import dev.octoshrimpy.quik.model.Contact
 import dev.octoshrimpy.quik.model.ContactGroup
@@ -62,18 +62,16 @@ class ComposeItemAdapter @Inject constructor(
         val layoutInflater = LayoutInflater.from(parent.context)
         val binding = ContactListItemBinding.inflate(layoutInflater, parent, false)
 
-        binding.icon.setTint(colors.theme().theme)
-
         binding.numbers.setRecycledViewPool(numbersViewPool)
         binding.numbers.adapter = PhoneNumberAdapter()
-        binding.numbers.forwardTouches(binding.root)
+        binding.numbers.forwardTouches(binding.row)
 
         return QkBindingViewHolder(binding).apply {
-            binding.root.setOnClickListener {
+            binding.row.setOnClickListener {
                 val item = getItem(adapterPosition)
                 clicks.onNext(item)
             }
-            binding.root.setOnLongClickListener {
+            binding.row.setOnLongClickListener {
                 val item = getItem(adapterPosition)
                 longClicks.onNext(item)
                 true
@@ -93,10 +91,21 @@ class ComposeItemAdapter @Inject constructor(
         }
     }
 
-    private fun bindNew(binding: ContactListItemBinding, contact: Contact) {
-        binding.index.isVisible = false
+    /** Heimdall-style pill header: shown only on the first row of a section. */
+    private fun bindHeader(binding: ContactListItemBinding, show: Boolean, text: String = "", icon: Int = 0) {
+        binding.index.isVisible = show
+        binding.index.text = text
+        binding.index.setCompoundDrawablesRelativeWithIntrinsicBounds(icon, 0, 0, 0)
+        binding.index.compoundDrawablesRelative[0]?.let { drawable ->
+            val size = (14 * binding.index.resources.displayMetrics.density).toInt()
+            drawable.setBounds(0, 0, size, size)
+            drawable.setTint(binding.index.currentTextColor)
+            binding.index.setCompoundDrawablesRelative(drawable, null, null, null)
+        }
+    }
 
-        binding.icon.isVisible = false
+    private fun bindNew(binding: ContactListItemBinding, contact: Contact) {
+        bindHeader(binding, false)
 
         binding.avatar.recipients = listOf(createRecipient(contact))
 
@@ -108,10 +117,7 @@ class ComposeItemAdapter @Inject constructor(
     }
 
     private fun bindRecent(binding: ContactListItemBinding, conversation: Conversation, prev: ComposeItem?) {
-        binding.index.isVisible = false
-
-        binding.icon.isVisible = prev !is ComposeItem.Recent
-        binding.icon.setImageResource(R.drawable.ic_history_black_24dp)
+        bindHeader(binding, prev !is ComposeItem.Recent, icon = R.drawable.ic_history_black_24dp)
 
         binding.avatar.recipients = conversation.recipients
 
@@ -130,10 +136,7 @@ class ComposeItemAdapter @Inject constructor(
     }
 
     private fun bindStarred(binding: ContactListItemBinding, contact: Contact, prev: ComposeItem?) {
-        binding.index.isVisible = false
-
-        binding.icon.isVisible = prev !is ComposeItem.Starred
-        binding.icon.setImageResource(R.drawable.ic_star_black_24dp)
+        bindHeader(binding, prev !is ComposeItem.Starred, text = "★")
 
         binding.avatar.recipients = listOf(createRecipient(contact))
 
@@ -146,10 +149,7 @@ class ComposeItemAdapter @Inject constructor(
     }
 
     private fun bindGroup(binding: ContactListItemBinding, group: ContactGroup, prev: ComposeItem?) {
-        binding.index.isVisible = false
-
-        binding.icon.isVisible = prev !is ComposeItem.Group
-        binding.icon.setImageResource(R.drawable.ic_people_black_24dp)
+        bindHeader(binding, prev !is ComposeItem.Group, icon = R.drawable.ic_people_black_24dp)
 
         binding.avatar.recipients = group.contacts.map(::createRecipient)
 
@@ -163,13 +163,8 @@ class ComposeItemAdapter @Inject constructor(
     }
 
     private fun bindPerson(binding: ContactListItemBinding, contact: Contact, prev: ComposeItem?) {
-        binding.index.isVisible = true
-        binding.index.text = if (contact.name.getOrNull(0)?.isLetter() == true) contact.name[0].toString() else "#"
-        binding.index.isVisible = prev !is ComposeItem.Person ||
-                (contact.name[0].isLetter() && !contact.name[0].equals(prev.value.name[0], ignoreCase = true)) ||
-                (!contact.name[0].isLetter() && prev.value.name[0].isLetter())
-
-        binding.icon.isVisible = false
+        val section = contactSection(contact.name)
+        bindHeader(binding, prev !is ComposeItem.Person || contactSection(prev.value.name) != section, text = section)
 
         binding.avatar.recipients = listOf(createRecipient(contact))
 
@@ -179,6 +174,20 @@ class ComposeItemAdapter @Inject constructor(
 
         binding.numbers.isVisible = true
         (binding.numbers.adapter as PhoneNumberAdapter).data = contact.numbers
+    }
+
+    /** Alphabet-rail sections: label to first adapter position, in list order. */
+    fun sections(): List<Pair<String, Int>> {
+        val sections = linkedMapOf<String, Int>()
+        data.forEachIndexed { index, item ->
+            val key = when (item) {
+                is ComposeItem.Starred -> "★"
+                is ComposeItem.Person -> contactSection(item.value.name)
+                else -> null
+            }
+            if (key != null && key !in sections) sections[key] = index
+        }
+        return sections.toList()
     }
 
     private fun createRecipient(contact: Contact): Recipient {

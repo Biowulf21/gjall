@@ -108,6 +108,8 @@ class SyncRepositoryImpl @Inject constructor(
                         .isNotNull("blockingClient")
                         .or()
                         .isNotEmpty("blockReason")
+                        .or()
+                        .isNotEmpty("draft")
                         .endGroup()
                         .findAll()
                 ).associateBy { conversation -> conversation.id }.toMutableMap()
@@ -195,6 +197,8 @@ class SyncRepositoryImpl @Inject constructor(
                                     blockingClient = persistedConversation.blockingClient
                                     blockReason = persistedConversation.blockReason
                                     sendAsGroup = persistedConversation.sendAsGroup
+                                    draft = persistedConversation.draft
+                                    draftDate = persistedConversation.draftDate
                                 }
                                 lastMessage = realm.where(Message::class.java)
                                     .sort("date", Sort.DESCENDING)

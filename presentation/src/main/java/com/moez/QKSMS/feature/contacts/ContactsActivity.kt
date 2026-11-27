@@ -28,6 +28,7 @@ import com.jakewharton.rxbinding2.view.clicks
 import com.jakewharton.rxbinding2.widget.editorActions
 import com.jakewharton.rxbinding2.widget.textChanges
 import dagger.android.AndroidInjection
+import dev.octoshrimpy.quik.common.util.extensions.resolveThemeColor
 import dev.octoshrimpy.quik.R
 import dev.octoshrimpy.quik.common.Navigator
 import dev.octoshrimpy.quik.common.ViewModelFactory
@@ -91,6 +92,11 @@ class ContactsActivity : QkThemedActivity(), ContactsContract {
         viewModel.bindView(this)
 
         binding.contacts.adapter = contactsAdapter
+        binding.alphabetIndex.attach(binding.contacts)
+        binding.alphabetIndex.setColors(
+                accent = colors.theme().theme,
+                ink = colors.theme().textPrimary,
+                muted = resolveThemeColor(android.R.attr.textColorSecondary))
 
         val callback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
@@ -104,6 +110,7 @@ class ContactsActivity : QkThemedActivity(), ContactsContract {
         binding.cancel.isVisible = state.query.length > 1
 
         contactsAdapter.data = state.composeItems
+        binding.alphabetIndex.setSections(if (state.query.isEmpty()) contactsAdapter.sections() else emptyList())
 
         if (state.selectedContact != null && !phoneNumberDialog.isShowing) {
             phoneNumberAdapter.data = state.selectedContact.numbers

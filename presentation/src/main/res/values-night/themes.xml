@@ -17,7 +17,7 @@
   ~ You should have received a copy of the GNU General Public License
   ~ along with QKSMS.  If not, see <http://www.gnu.org/licenses/>.
   -->
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
     <style name="AppTheme" parent="AppBaseTheme">
         <item name="android:windowLightStatusBar">false</item>
@@ -38,6 +38,9 @@
         <item name="colorPrimary">@color/backgroundDark</item>
         <item name="colorPrimaryDark">@color/backgroundDark</item>
         <item name="selectableItemBackground">@drawable/ripple_dark</item>
+        <item name="surfaceContainerHigh">@color/surfaceContainerHighDark</item>
+        <item name="toolbarColor">?attr/colorPrimary</item>
+        <item name="bubbleRadius">18dp</item>
         <item name="switchThumbEnabled">@color/switchThumbEnabledDark</item>
         <item name="switchThumbDisabled">@color/switchThumbDisabledDark</item>
         <item name="switchTrackEnabled">@color/switchTrackEnabledDark</item>
@@ -56,6 +59,8 @@
         <item name="colorPrimaryDark">@color/backgroundDark</item>
         <item name="selectableItemBackground">@drawable/ripple_dark</item>
         <item name="windowActionBar">false</item>
+        <item name="toolbarColor">?attr/colorPrimary</item>
+        <item name="bubbleRadius">18dp</item>
     </style>
 
     <style name="PopupTheme" parent="ThemeOverlay.AppCompat">
@@ -71,6 +76,7 @@
         <item name="bubbleColor">@color/bubbleBlack</item>
         <item name="colorPrimary">@color/black</item>
         <item name="colorPrimaryDark">@color/black</item>
+        <item name="surfaceContainerHigh">@color/surfaceContainerHighBlack</item>
     </style>
 
     <style name="AppThemeDialog.Black">
@@ -83,6 +89,19 @@
     <style name="PopupTheme.Black">
         <item name="android:colorBackground">@color/black</item>
         <item name="bubbleColor">@color/bubbleBlack</item>
+    </style>
+
+
+    <!-- Expressive night variants -->
+    <style name="AppTheme.Expressive" parent="Base.AppTheme.Expressive">
+        <item name="selectableItemBackground">@drawable/ripple_dark</item>
+    </style>
+
+    <style name="AppTheme.Expressive.Black">
+        <item name="android:navigationBarColor">@color/black</item>
+        <item name="android:statusBarColor">@color/black</item>
+        <item name="android:windowBackground">@color/black</item>
+        <item name="toolbarColor">@color/black</item>
     </style>
 
 </resources>

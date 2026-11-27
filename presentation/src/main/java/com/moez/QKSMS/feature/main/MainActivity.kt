@@ -49,12 +49,21 @@ import dev.octoshrimpy.quik.common.androidxcompat.drawerOpen
 import dev.octoshrimpy.quik.common.base.QkThemedActivity
 import dev.octoshrimpy.quik.common.util.extensions.autoScrollToStart
 import dev.octoshrimpy.quik.common.util.extensions.dismissKeyboard
+import dev.octoshrimpy.quik.common.util.extensions.heimdallStyle
 import dev.octoshrimpy.quik.common.util.extensions.resolveThemeColor
 import dev.octoshrimpy.quik.common.util.extensions.scrapViews
 import dev.octoshrimpy.quik.common.util.extensions.setBackgroundTint
 import dev.octoshrimpy.quik.common.util.extensions.setTint
 import dev.octoshrimpy.quik.common.util.extensions.setVisible
 import dev.octoshrimpy.quik.common.widget.TextInputDialog
+import androidx.core.view.children
+import com.google.android.material.shape.ShapeAppearanceModel
+import com.google.android.material.shape.MaterialShapeDrawable
+import dev.octoshrimpy.quik.common.widget.MorphShapeDrawable
+import dev.octoshrimpy.quik.common.widget.ConversationGroupDecoration
+import dev.octoshrimpy.quik.common.util.extensions.dpToPx
+import androidx.core.view.updateLayoutParams
+import android.view.ViewGroup
 import dev.octoshrimpy.quik.feature.blocking.BlockingDialog
 import dev.octoshrimpy.quik.databinding.MainActivityBinding
 import dev.octoshrimpy.quik.databinding.MainPermissionHintBinding
@@ -69,6 +78,11 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.subjects.PublishSubject
 import io.reactivex.subjects.Subject
 import javax.inject.Inject
+
+// Long enough to reach Undo comfortably, short enough that a deferred delete commits promptly
+private const val UNDO_DURATION = 5000
+// Compose FAB is 56dp with 16dp margins; the snackbar stops 16dp short of it
+private const val FAB_INSET_DP = 16 + 56 + 16
 
 class MainActivity : QkThemedActivity(), MainView {
 
@@ -113,6 +127,8 @@ class MainActivity : QkThemedActivity(), MainView {
     override val rateIntent by lazy { binding.drawer.rateOkay.clicks() }
     override val conversationsSelectedIntent by lazy { conversationsAdapter.selectionChanges }
     override val confirmDeleteIntent: Subject<List<Long>> = PublishSubject.create()
+    override val undoDeleteIntent: Subject<List<Long>> = PublishSubject.create()
+    override val commitDeleteIntent: Subject<List<Long>> = PublishSubject.create()
     override val renameConversationIntent: Subject<String> = PublishSubject.create()
     override val swipeConversationIntent by lazy { itemTouchCallback.swipes }
     override val changelogMoreIntent by lazy { changelogDialog.moreClicks }
@@ -163,6 +179,47 @@ class MainActivity : QkThemedActivity(), MainView {
             homeIntent.onNext(Unit)
         }
 
+        if (expressive) {
+            MorphShapeDrawable.apply(binding.compose)
+            // Heimdall-sized FAB (64dp, 24dp icon): a bigger, easier tap target
+            binding.compose.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                width = 64.dpToPx(this@MainActivity)
+                height = width
+            }
+            20.dpToPx(this).let { pad -> binding.compose.setPadding(pad, pad, pad, pad) }
+
+            // Top bar: no title or extra buttons, just the menu button and an always-open search
+            // pill with a leading search icon (Google Messages-style)
+            binding.toolbar.updateLayoutParams { height = 72.dpToPx(this@MainActivity) }
+            binding.toolbarSearch.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                marginEnd = 16.dpToPx(this@MainActivity)
+            }
+            binding.toolbarSearch.minHeight = 48.dpToPx(this)
+            binding.toolbarSearch.setCompoundDrawablesRelativeWithIntrinsicBounds(R.drawable.ic_search_black_24dp, 0, 0, 0)
+            binding.toolbarSearch.compoundDrawablePadding = 12.dpToPx(this)
+            binding.toolbarSearch.compoundDrawableTintList =
+                ColorStateList.valueOf(resolveThemeColor(R.attr.colorOnSurfaceVariant))
+
+            // Drawer: large title, rows as grouped cards with tonal badges (ExpressiveStyler),
+            // rounded outer corners like an M3 Expressive side sheet
+            binding.drawer.root.background = MaterialShapeDrawable(ShapeAppearanceModel.builder()
+                .setTopRightCornerSize(28.dpToPx(this).toFloat())
+                .setBottomRightCornerSize(28.dpToPx(this).toFloat())
+                .build()).apply { fillColor = ColorStateList.valueOf(resolveThemeColor(R.attr.colorSurfaceContainerLow)) }
+            binding.drawer.drawerTitle.setVisible(true)
+            binding.drawer.drawerTitle.setTag(R.id.expressive_styled, true) // a title, not a section pill
+            binding.drawer.drawerTitle.setText(if (prefs.brandLauncherName.get()) R.string.app_name else R.string.launcher_name)
+            binding.drawer.drawerList.setTag(R.id.expressive_rows, true)
+            binding.drawer.drawerList.children.filter { it.isClickable && it is ViewGroup }.forEach { row ->
+                row.updateLayoutParams { height = 56.dpToPx(this@MainActivity) }
+                row.setPaddingRelative(4.dpToPx(this), 0, 16.dpToPx(this), 0)
+                (row as ViewGroup).getChildAt(0).updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                    marginEnd = 16.dpToPx(this@MainActivity)
+                }
+            }
+            ConversationGroupDecoration(this).attachTo(binding.recyclerView)
+        }
+
         itemTouchCallback.adapter = conversationsAdapter
         conversationsAdapter.autoScrollToStart(binding.recyclerView)
 
@@ -194,8 +251,9 @@ class MainActivity : QkThemedActivity(), MainView {
                 binding.drawer.rateIcon.setTint(theme.theme)
                 binding.compose.setBackgroundTint(theme.theme)
 
-                    // Set the FAB compose icon color
-                    binding.compose.setTint(theme.textPrimary)
+                // Set the FAB compose icon color
+                binding.compose.setTint(theme.textPrimary)
+
                 }
     }
 
@@ -455,13 +513,27 @@ class MainActivity : QkThemedActivity(), MainView {
             } else {
                 resources.getQuantityString(R.plurals.toast_unarchived, countConversationsArchived, countConversationsArchived)
             },
-            if (countConversationsArchived < 10) Snackbar.LENGTH_LONG
+            if (countConversationsArchived < 10) UNDO_DURATION
             else Snackbar.LENGTH_INDEFINITE
         ).let {
             it.setAction(R.string.button_undo) { undoArchiveIntent.onNext(Unit) }
-            it.setActionTextColor(colors.theme().theme)
+            it.heimdallStyle(colors.theme().theme, endInsetDp = FAB_INSET_DP)
             it.show()
         }
+
+    override fun showDeletedSnackbar(threadIds: List<Long>) {
+        Snackbar.make(binding.drawerLayout, R.string.conversation_deleted, UNDO_DURATION).apply {
+            setAction(R.string.button_undo) { undoDeleteIntent.onNext(threadIds) }
+            addCallback(object : Snackbar.Callback() {
+                override fun onDismissed(snackbar: Snackbar?, event: Int) {
+                    // Timeout, swipe-away or a newer snackbar all commit; only Undo keeps the thread
+                    if (event != DISMISS_EVENT_ACTION) commitDeleteIntent.onNext(threadIds)
+                }
+            })
+            heimdallStyle(colors.theme().theme, endInsetDp = FAB_INSET_DP)
+            show()
+        }
+    }
 
     override fun onCreateOptionsMenu(menu: Menu?) =
         menu?.let {

@@ -42,10 +42,10 @@
 
         <ImageView
             android:id="@+id/speechToTextIconBorder"
-            android:layout_width="78dp"
-            android:layout_height="78dp"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
             android:background="@drawable/circle"
-            android:padding="6dp"
+            android:padding="4dp"
             tools:backgroundTint="@color/tools_theme"
             tools:tint="@color/textPrimaryDark" />
 
@@ -115,7 +115,7 @@
         android:id="@+id/sendAsGroupBackground"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:background="?attr/colorPrimary"
+        android:background="?attr/toolbarColor"
         app:layout_constraintBottom_toBottomOf="@id/sendAsGroupSummary"
         app:layout_constraintTop_toBottomOf="@id/toolbar" />
 

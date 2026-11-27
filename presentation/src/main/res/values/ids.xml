@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- View tags used by ExpressiveStyler -->
+    <item name="expressive_styled" type="id" />
+    <item name="expressive_rows" type="id" />
+    <item name="expressive_keep_title" type="id" />
+</resources>

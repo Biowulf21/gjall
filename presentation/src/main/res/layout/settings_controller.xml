@@ -31,7 +31,7 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:paddingTop="8dp"
-        android:paddingBottom="8dp">
+        android:paddingBottom="24dp">
 
         <dev.octoshrimpy.quik.common.widget.QkTextView
             style="@style/PreferenceCategory"
@@ -44,6 +44,22 @@
             app:icon="@drawable/ic_color_lens_black_24dp"
             app:title="@string/settings_theme_title"
             app:widget="@layout/settings_theme_widget" />
+
+        <dev.octoshrimpy.quik.common.widget.PreferenceView
+            android:id="@+id/designStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:icon="@drawable/ic_color_lens_black_24dp"
+            app:title="@string/settings_design_style_title"
+            tools:summary="Expressive" />
+
+        <dev.octoshrimpy.quik.common.widget.PreferenceView
+            android:id="@+id/appName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:icon="@drawable/ic_title_black_24dp"
+            app:title="@string/settings_app_name_title"
+            tools:summary="Messages" />
 
         <dev.octoshrimpy.quik.common.widget.PreferenceView
             android:id="@+id/night"
@@ -77,6 +93,10 @@
             app:title="@string/settings_night_end_title"
             tools:summary="9:00AM" />
 
+        <dev.octoshrimpy.quik.common.widget.QkTextView
+            style="@style/PreferenceCategory"
+            android:text="@string/settings_category_text" />
+
         <dev.octoshrimpy.quik.common.widget.PreferenceView
             android:id="@+id/textSize"
             android:layout_width="match_parent"
@@ -89,6 +109,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:icon="@drawable/ic_person_black_24dp"
+            app:summary="@string/settings_automatic_colors_summary"
             app:title="@string/settings_automatic_colors_title"
             app:widget="@layout/settings_switch_widget" />
 
@@ -107,13 +128,6 @@
             app:icon="@drawable/ic_speech_to_text_black"
             app:title="@string/settings_system_show_stt_title"
             app:widget="@layout/settings_switch_widget" />
-
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp"
-            android:background="?android:attr/divider" />
 
         <dev.octoshrimpy.quik.common.widget.QkTextView
             style="@style/PreferenceCategory"
@@ -176,6 +190,10 @@
             app:icon="@drawable/ic_short_text_black_24dp"
             app:title="@string/settings_signature_title" />
 
+        <dev.octoshrimpy.quik.common.widget.QkTextView
+            style="@style/PreferenceCategory"
+            android:text="@string/settings_category_sending" />
+
         <dev.octoshrimpy.quik.common.widget.PreferenceView
             android:id="@+id/unicode"
             android:layout_width="match_parent"
@@ -221,6 +239,10 @@
             app:title="@string/settings_mms_weblink_title"
             tools:summary="100KB" />
 
+        <dev.octoshrimpy.quik.common.widget.QkTextView
+            style="@style/PreferenceCategory"
+            android:text="@string/settings_category_privacy" />
+
         <dev.octoshrimpy.quik.common.widget.PreferenceView
             android:id="@+id/disableScreenshots"
             android:layout_width="match_parent"
@@ -230,12 +252,9 @@
             app:title="@string/settings_disable_screenshots_title"
             app:widget="@layout/settings_switch_widget" />
 
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp"
-            android:background="?android:attr/divider" />
+        <dev.octoshrimpy.quik.common.widget.QkTextView
+            style="@style/PreferenceCategory"
+            android:text="@string/settings_category_data" />
 
         <dev.octoshrimpy.quik.common.widget.PreferenceView
             android:id="@+id/sync"

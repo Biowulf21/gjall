@@ -71,7 +71,7 @@ class ConversationsAdapter @Inject constructor(
 
             binding.snippet.setTypeface(binding.snippet.typeface, Typeface.BOLD)
             binding.snippet.setTextColor(textColorPrimary)
-            binding.snippet.maxLines = 5
+            binding.snippet.maxLines = 2
 
             binding.unread.isVisible = true
 

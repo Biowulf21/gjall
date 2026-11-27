@@ -127,7 +127,8 @@ class MainViewModel @Inject constructor(
         // If we have all permissions and we've never run a sync, run a sync. This will be the case
         // when upgrading from 2.7.3, or if the app's data was cleared
         val lastSync = Realm.getDefaultInstance().use { realm -> realm.where(SyncLog::class.java)?.max("date") ?: 0 }
-        if (lastSync == 0 && permissionManager.isDefaultSms() && permissionManager.hasReadSms() && permissionManager.hasContacts()) {
+        // A recipient with id 0 means conversations share it and show the wrong number; resync repairs them
+        if ((lastSync == 0 || conversationRepo.getRecipient(0) != null) && permissionManager.isDefaultSms() && permissionManager.hasReadSms() && permissionManager.hasContacts()) {
             syncMessages.execute(Unit)
         }
 
@@ -570,8 +571,11 @@ class MainViewModel @Inject constructor(
                                 lastArchivedThreadIds = listOf(threadId)
                                 view.showArchivedSnackbar(1, true)
                             }
+                        // Deferred delete: hide via archive now, delete only once the undo window closes
                         Preferences.SWIPE_ACTION_DELETE ->
-                            view.showDeleteDialog(listOf(threadId))
+                            markArchived.execute(listOf(threadId)) {
+                                view.showDeletedSnackbar(listOf(threadId))
+                            }
                         Preferences.SWIPE_ACTION_BLOCK ->
                             view.showBlockingDialog(listOf(threadId), true)
                         Preferences.SWIPE_ACTION_CALL -> {
@@ -593,6 +597,18 @@ class MainViewModel @Inject constructor(
                 .subscribe {
                     markUnarchived.execute(lastArchivedThreadIds.toList())
                     lastArchivedThreadIds = listOf()
+                }
+
+        view.undoDeleteIntent
+                .autoDisposable(view.scope())
+                .subscribe { threadIds -> markUnarchived.execute(threadIds) }
+
+        view.commitDeleteIntent
+                .autoDisposable(view.scope())
+                .subscribe { threadIds ->
+                    // Skip threads a new message un-archived during the undo window
+                    val stillHidden = threadIds.filter { conversationRepo.getConversation(it)?.archived == true }
+                    if (stillHidden.isNotEmpty()) deleteConversations.execute(stillHidden)
                 }
 
         view.snackbarButtonIntent

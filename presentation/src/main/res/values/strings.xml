@@ -45,6 +45,7 @@
     <string name="menu_mms_part_open">Open externally</string>
 
     <string name="main_drawer_open_cd">Open navigation drawer</string>
+    <string name="main_search_cd">Search</string>
     <string name="main_title_selected">%d selected</string>
     <string name="main_menu_clear">Clear</string>
     <string name="main_menu_select_all">Select all</string>
@@ -71,12 +72,12 @@
     <string name="archived_empty_text">Your archived conversations will appear here</string>
     <string name="main_fab_cd">Start new conversation</string>
     <string name="main_default_sms_title">Love texting again</string>
-    <string name="main_default_sms_message">Make QUIK your default SMS app</string>
+    <string name="main_default_sms_message">Make Gjall your default SMS app</string>
     <string name="main_default_sms_change">Change</string>
     <string name="main_permission_required">Permission required</string>
-    <string name="main_permission_sms">QUIK needs permission to send and view SMS messages</string>
-    <string name="main_permission_contacts">QUIK needs permission to view your contacts</string>
-    <string name="main_permission_notifications">QUIK needs permission to display notifications</string>
+    <string name="main_permission_sms">Gjall needs permission to send and view SMS messages</string>
+    <string name="main_permission_contacts">Gjall needs permission to view your contacts</string>
+    <string name="main_permission_notifications">Gjall needs permission to display notifications</string>
     <string name="main_permission_allow">Allow</string>
 
     <string name="scheduled_menu_send_now">Send now</string>
@@ -92,7 +93,7 @@
     <string name="drawer_help">Help &amp; feedback</string>
     <string name="drawer_invite">Invite friends</string>
 
-    <string name="rate_title">Enjoying QUIK?</string>
+    <string name="rate_title">Enjoying Gjall?</string>
     <string name="rate_summary">Share some love and leave us a Star on GitHub!</string>
     <string name="rate_okay">OKAY!</string>
     <string name="rate_dismiss">DISMISS</string>
@@ -228,9 +229,9 @@
     <string name="backup_selected_backup_error_message">Couldn\'t read backup file</string>
     <string name="backup_selected_backup_details_title">Backup details</string>
     <string name="backup_restore_dialog_title">Backups</string>
-    <string name="backup_restore_dialog_summary" translatable="false">/QUIK/Backups</string>
+    <string name="backup_restore_dialog_summary" translatable="false">/Gjall/Backups</string>
     <string name="backup_restore_dialog_empty">No backups found</string>
-    <string name="backup_disclaimer">Currently, only SMS is supported by Backup and Restore. MMS support and scheduled backups will be coming soon!</string>
+    <string name="backup_disclaimer">Backup and restore currently support SMS only. MMS and scheduled backups are not available yet.</string>
     <string name="backup_now">Backup now</string>
     <string name="backup_progress_parsing">Parsing backup…</string>
     <string name="backup_progress_running">%d/%d messages</string>
@@ -255,7 +256,11 @@
     <string name="attachment_missing">Missing</string>
 
     <string name="settings_category_appearance">Appearance</string>
-    <string name="settings_category_general">General</string>
+    <string name="settings_category_general">Messages</string>
+    <string name="settings_category_text">Text</string>
+    <string name="settings_category_sending">Sending and MMS</string>
+    <string name="settings_category_privacy">Privacy</string>
+    <string name="settings_category_data">Data and about</string>
     <string name="settings_category_qkreply">QK Reply</string>
 
     <string name="settings_theme_title">Theme</string>
@@ -306,6 +311,9 @@
     <string name="settings_delivery_summary">Confirm that messages were sent successfully</string>
     <string name="settings_unread_at_top_title">Unread at the top</string>
     <string name="settings_unread_at_top_summary">Show unread conversations at the top</string>
+    <string name="settings_design_style_title">Design style</string>
+    <string name="settings_app_name_title">App name</string>
+    <string name="settings_app_name_dialog_title">App name. Switching may move the home-screen icon and restart the app.</string>
     <string name="settings_signature_title">Signature</string>
     <string name="settings_signature_summary">Add a signature to the end of your messages</string>
     <string name="settings_unicode_title">Strip accents</string>
@@ -344,7 +352,7 @@
     <string name="blocking_conversations">Blocked conversations</string>
 
     <string name="blocking_manager_title">Blocking Manager</string>
-    <string name="blocking_manager_qksms_summary">Built-in blocking functionality in QUIK</string>
+    <string name="blocking_manager_qksms_summary">Built-in blocking functionality in Gjall</string>
     <string name="blocking_manager_call_blocker_title" translatable="false">Call Blocker - Incoming/Outgoing</string>
     <string name="blocking_manager_call_blocker_summary">Block spam messages, numbers &amp; unknown calls with blacklist &amp; Schedule</string>
     <string name="blocking_manager_call_control_title" translatable="false">Call Control</string>
@@ -427,7 +435,7 @@
     <string name="about_license" translatable="false">GNU General Public License v3.0</string>
     <string name="about_copyright" translatable="false">© 2014–2026</string>
 
-    <string name="changelog_title" translatable="false">New in QUIK</string>
+    <string name="changelog_title" translatable="false">New in Gjall</string>
     <string name="changelog_version" translatable="false">Version %s</string>
     <string name="changelog_added" translatable="false">Added</string>
     <string name="changelog_improved" translatable="false">Improved</string>
@@ -490,6 +498,16 @@
         <item>Show name and message</item>
         <item>Show name</item>
         <item>Hide contents</item>
+    </string-array>
+
+    <string-array name="design_styles">
+        <item>Expressive</item>
+        <item>Classic</item>
+    </string-array>
+
+    <string-array name="app_names">
+        <item>@string/launcher_name</item>
+        <item>@string/app_name</item>
     </string-array>
 
     <string-array name="text_sizes">
@@ -566,4 +584,8 @@
 
     <string name="messages_text_share_file_error">Oops! Something went wrong while sharing</string>
     <string name="about_donate">Support Gjall</string>
+    <string name="contact_alphabet_index">Contacts alphabet index</string>
+    <string name="contact_jump_section">Jump to %1$s</string>
+    <string name="settings_automatic_colors_summary">Off: every contact uses your theme color</string>
+    <string name="conversation_deleted">Conversation deleted</string>
 </resources>

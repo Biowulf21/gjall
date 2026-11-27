@@ -17,9 +17,14 @@
   ~ You should have received a copy of the GNU General Public License
   ~ along with QKSMS.  If not, see <http://www.gnu.org/licenses/>.
   -->
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
     <attr name="bubbleColor" format="reference" />
+    <!-- Toolbar background; Classic uses colorPrimary, Expressive the M3 surface -->
+    <attr name="toolbarColor" format="color" />
+    <!-- Outer corner of message bubbles: Classic 18dp, Expressive 24dp -->
+    <attr name="bubbleRadius" format="dimension" />
+    <attr name="surfaceContainerHigh" format="color" />
     <attr name="switchThumbEnabled" format="color" />
     <attr name="switchThumbDisabled" format="color" />
     <attr name="switchTrackEnabled" format="color" />
@@ -50,6 +55,9 @@
         <item name="colorPrimary">@color/backgroundLight</item>
         <item name="colorPrimaryDark">@color/backgroundLight</item>
         <item name="selectableItemBackground">@drawable/ripple</item>
+        <item name="surfaceContainerHigh">@color/surfaceContainerHighLight</item>
+        <item name="toolbarColor">?attr/colorPrimary</item>
+        <item name="bubbleRadius">18dp</item>
         <item name="switchThumbEnabled">@color/switchThumbEnabledLight</item>
         <item name="switchThumbDisabled">@color/switchThumbDisabledLight</item>
         <item name="switchTrackEnabled">@color/switchTrackEnabledLight</item>
@@ -68,6 +76,8 @@
         <item name="colorPrimaryDark">@color/backgroundLight</item>
         <item name="selectableItemBackground">@drawable/ripple</item>
         <item name="windowActionBar">false</item>
+        <item name="toolbarColor">?attr/colorPrimary</item>
+        <item name="bubbleRadius">18dp</item>
     </style>
 
     <style name="PopupTheme" parent="ThemeOverlay.AppCompat.Light">
@@ -83,5 +93,34 @@
     <style name="AppTheme.Black" />
     <style name="AppThemeDialog.Black" />
     <style name="PopupTheme.Black" />
+
+
+    <!-- Expressive (Material 3) design style. Classic themes above are untouched. -->
+    <style name="Base.AppTheme.Expressive" parent="Theme.Material3.DynamicColors.DayNight.NoActionBar">
+        <item name="android:divider">?attr/colorOutlineVariant</item>
+        <item name="android:navigationBarColor">?attr/colorSurface</item>
+        <item name="android:queryBackground">?attr/colorSurfaceContainerHigh</item>
+        <item name="android:statusBarColor">?attr/colorSurface</item>
+        <item name="android:textColorTertiary">?attr/colorOutline</item>
+        <item name="android:windowBackground">?attr/colorSurface</item>
+        <item name="android:windowContentTransitions">true</item>
+        <item name="android:windowLightStatusBar">?attr/isLightTheme</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="27">?attr/isLightTheme</item>
+        <item name="bubbleColor">?attr/colorSurfaceContainerHigh</item>
+        <item name="surfaceContainerHigh">?attr/colorSurfaceContainerHighest</item>
+        <item name="toolbarColor">?attr/colorSurface</item>
+        <item name="bubbleRadius">18dp</item>
+        <item name="switchThumbEnabled">?attr/colorOutline</item>
+        <item name="switchThumbDisabled">?attr/colorOutlineVariant</item>
+        <item name="switchTrackEnabled">?attr/colorSurfaceContainerHighest</item>
+        <item name="switchTrackDisabled">?attr/colorSurfaceContainer</item>
+        <item name="windowActionBar">false</item>
+    </style>
+
+    <style name="AppTheme.Expressive" parent="Base.AppTheme.Expressive">
+        <item name="selectableItemBackground">@drawable/ripple</item>
+    </style>
+
+    <style name="AppTheme.Expressive.Black" />
 
 </resources>

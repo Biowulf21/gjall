@@ -84,6 +84,9 @@ class Preferences @Inject constructor(
         const val MESSAGE_LINK_HANDLING_BLOCK = 0
         const val MESSAGE_LINK_HANDLING_ALLOW = 1
         const val MESSAGE_LINK_HANDLING_ASK = 2
+
+        const val DESIGN_STYLE_EXPRESSIVE = 0
+        const val DESIGN_STYLE_CLASSIC = 1
     }
 
     // Internal
@@ -107,7 +110,7 @@ class Preferences @Inject constructor(
     val nightEnd = rxPrefs.getString("nightEnd", "6:00")
     val black = rxPrefs.getBoolean("black", false)
     val autoColor = rxPrefs.getBoolean("autoColor", true)
-    val systemFont = rxPrefs.getBoolean("systemFont", false)
+    val systemFont = rxPrefs.getBoolean("systemFont", true)
     val showStt = rxPrefs.getBoolean("showStt", true)
     val showSttOffsetX = rxPrefs.getFloat("showSttOffsetX", Float.MIN_VALUE)
     val showSttOffsetY = rxPrefs.getFloat("showSttOffsetY", Float.MIN_VALUE)
@@ -122,7 +125,7 @@ class Preferences @Inject constructor(
     val qkreplyTapDismiss = rxPrefs.getBoolean("qkreplyTapDismiss", true)
     val sendDelay = rxPrefs.getInteger("sendDelay", SEND_DELAY_NONE)
     val swipeRight = rxPrefs.getInteger("swipeRight", SWIPE_ACTION_ARCHIVE)
-    val swipeLeft = rxPrefs.getInteger("swipeLeft", SWIPE_ACTION_ARCHIVE)
+    val swipeLeft = rxPrefs.getInteger("swipeLeft", SWIPE_ACTION_DELETE)
     val autoEmoji = rxPrefs.getBoolean("autoEmoji", true)
     val delivery = rxPrefs.getBoolean("delivery", false)
     val signature = rxPrefs.getString("signature", "")
@@ -135,6 +138,8 @@ class Preferences @Inject constructor(
     val disableScreenshots = rxPrefs.getBoolean("disableScreenshots", false)
     val logging = rxPrefs.getBoolean("logging", false)
     val unreadAtTop = rxPrefs.getBoolean("unreadAtTop", false)
+    val designStyle = rxPrefs.getInteger("designStyle", DESIGN_STYLE_EXPRESSIVE)
+    val brandLauncherName = rxPrefs.getBoolean("brandLauncherName", false)
 
     val autoDeduplicate = rxPrefs.getBoolean("autoDeduplicateMessages", false)
 

@@ -27,6 +27,7 @@ import dev.octoshrimpy.quik.common.Navigator
 import dev.octoshrimpy.quik.common.base.QkPresenter
 import dev.octoshrimpy.quik.common.util.Colors
 import dev.octoshrimpy.quik.common.util.DateFormatter
+import dev.octoshrimpy.quik.common.util.LauncherName
 import dev.octoshrimpy.quik.common.util.extensions.makeToast
 import dev.octoshrimpy.quik.interactor.SyncMessages
 import dev.octoshrimpy.quik.repository.SyncRepository
@@ -92,6 +93,16 @@ class SettingsPresenter @Inject constructor(
 
         disposables += prefs.unreadAtTop.asObservable()
             .subscribe { enabled -> newState { copy(unreadAtTopEnabled = enabled) } }
+
+        val designStyleLabels = context.resources.getStringArray(R.array.design_styles)
+        disposables += prefs.designStyle.asObservable()
+            .subscribe { id -> newState { copy(designStyleSummary = designStyleLabels[id], designStyleId = id) } }
+
+        val appNameLabels = context.resources.getStringArray(R.array.app_names)
+        disposables += prefs.brandLauncherName.asObservable()
+            .subscribe { brand ->
+                newState { copy(appNameSummary = appNameLabels[if (brand) 1 else 0], brandLauncherName = brand) }
+            }
 
         disposables += prefs.signature.asObservable()
                 .subscribe { signature -> newState { copy(signature = signature) } }
@@ -188,6 +199,10 @@ class SettingsPresenter @Inject constructor(
 
                         R.id.unreadAtTop -> prefs.unreadAtTop.set(!prefs.unreadAtTop.get())
 
+                        R.id.designStyle -> view.showDesignStylePicker()
+
+                        R.id.appName -> view.showAppNamePicker()
+
                         R.id.signature -> view.showSignatureDialog(prefs.signature.get())
 
                         R.id.textSize -> view.showTextSizePicker()
@@ -244,6 +259,19 @@ class SettingsPresenter @Inject constructor(
         view.nightEndSelected()
                 .autoDisposable(view.scope())
                 .subscribe { nightModeManager.setNightEnd(it.first, it.second) }
+
+        view.designStyleSelected()
+                .autoDisposable(view.scope())
+                .subscribe(prefs.designStyle::set)
+
+        view.appNameSelected()
+                .map { index -> index == 1 }
+                .filter { brand -> brand != prefs.brandLauncherName.get() }
+                .autoDisposable(view.scope())
+                .subscribe { brand ->
+                    prefs.brandLauncherName.set(brand)
+                    LauncherName.apply(context, brand)
+                }
 
         view.textSizeSelected()
                 .autoDisposable(view.scope())

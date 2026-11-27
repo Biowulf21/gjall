@@ -32,12 +32,14 @@ import dev.octoshrimpy.quik.R
 import dev.octoshrimpy.quik.common.util.Colors
 import dev.octoshrimpy.quik.common.util.extensions.resolveThemeBoolean
 import dev.octoshrimpy.quik.common.util.extensions.resolveThemeColor
+import dev.octoshrimpy.quik.common.widget.ExpressiveStyler
 import dev.octoshrimpy.quik.extensions.Optional
 import dev.octoshrimpy.quik.extensions.asObservable
 import dev.octoshrimpy.quik.extensions.mapNotNull
 import dev.octoshrimpy.quik.repository.ConversationRepository
 import dev.octoshrimpy.quik.repository.MessageRepository
 import dev.octoshrimpy.quik.util.PhoneNumberUtils
+import dev.octoshrimpy.quik.util.Preferences
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.rxkotlin.Observables
@@ -100,7 +102,7 @@ abstract class QkThemedActivity : QkActivity() {
         super.onCreate(savedInstanceState)
 
         // When certain preferences change, we need to recreate the activity
-        val triggers = listOf(prefs.nightMode, prefs.night, prefs.black, prefs.textSize, prefs.systemFont)
+        val triggers = listOf(prefs.nightMode, prefs.night, prefs.black, prefs.textSize, prefs.systemFont, prefs.designStyle)
         Observable.merge(triggers.map { it.asObservable().skip(1) })
                 .debounce(400, TimeUnit.MILLISECONDS)
                 .observeOn(AndroidSchedulers.mainThread())
@@ -129,6 +131,11 @@ abstract class QkThemedActivity : QkActivity() {
     override fun onPostCreate(savedInstanceState: Bundle?) {
         super.onPostCreate(savedInstanceState)
 
+        // Expressive: restyle every screen in place (toolbars, grouped card lists, headers)
+        if (getActivityThemeRes(prefs.black.get()).let { it == R.style.AppTheme_Expressive || it == R.style.AppTheme_Expressive_Black }) {
+            window.decorView.viewTreeObserver.addOnGlobalLayoutListener { ExpressiveStyler.style(window.decorView) }
+        }
+
         // Set the color for the overflow and navigation icon
         val textSecondary = resolveThemeColor(android.R.attr.textColorSecondary)
         toolbar?.overflowIcon = toolbar?.overflowIcon?.apply { setTint(textSecondary) }
@@ -154,8 +161,13 @@ abstract class QkThemedActivity : QkActivity() {
      * This can be overridden in case an activity does not want to use the default themes
      */
     open fun getActivityThemeRes(black: Boolean) = when {
+        expressive && black -> R.style.AppTheme_Expressive_Black
+        expressive -> R.style.AppTheme_Expressive
         black -> R.style.AppTheme_Black
         else -> R.style.AppTheme
     }
+
+    val expressive: Boolean
+        get() = prefs.designStyle.get() == Preferences.DESIGN_STYLE_EXPRESSIVE
 
 }

@@ -31,13 +31,14 @@
             android:layout_height="match_parent"
             android:clipToPadding="false"
             android:paddingTop="8dp"
-            android:paddingBottom="8dp"
+            android:paddingBottom="88dp"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
 
     <dev.octoshrimpy.quik.common.widget.QkTextView
             android:id="@+id/empty"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:padding="32dp"
             android:gravity="center"
             android:text="@string/message_content_filters_empty"
             android:textColor="?android:attr/textColorTertiary" />

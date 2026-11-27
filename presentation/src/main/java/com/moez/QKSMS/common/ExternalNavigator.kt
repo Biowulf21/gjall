@@ -95,7 +95,7 @@ class ExternalNavigator @Inject constructor(
         val intent = Intent(Intent.ACTION_SENDTO)
         intent.data = "mailto:".toUri()
         intent.putExtra(Intent.EXTRA_EMAIL, arrayOf("quik@octo.sh"))
-        intent.putExtra(Intent.EXTRA_SUBJECT, "QUIK Support")
+        intent.putExtra(Intent.EXTRA_SUBJECT, "Gjall Support")
         intent.putExtra(
             Intent.EXTRA_TEXT, StringBuilder("\n\n")
                 .append("\n\n--- Please write your message above this line ---\n\n")

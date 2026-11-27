@@ -22,16 +22,16 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 
 android {
-    compileSdk 34
+    compileSdk 35
 
     defaultConfig {
         applicationId 'io.github.biowulf21.gjall'
         resValue("string", "application_id", applicationId)
         minSdkVersion 23
         targetSdkVersion 33
-        versionCode 2240
-        versionName '4.3.8'
-        setProperty("archivesBaseName", "QUIK-v${versionName}")
+        versionCode 2243
+        versionName '4.6.0'
+        setProperty("archivesBaseName", "Gjall-v${versionName}")
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -126,6 +126,7 @@ dependencies {
     implementation "androidx.core:core-ktx:$androidx_core_version"
     implementation "androidx.viewpager2:viewpager2:$androidx_viewpager_version"
     implementation "com.google.android.material:material:$material_version"
+    implementation "androidx.graphics:graphics-shapes:1.0.1"
     implementation("androidx.work:work-runtime-ktx:$androidx_work_version")
 
     // conductor

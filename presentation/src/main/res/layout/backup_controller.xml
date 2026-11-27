@@ -26,8 +26,9 @@
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:clipToPadding="false"
         android:paddingTop="8dp"
-        android:paddingBottom="8dp">
+        android:paddingBottom="88dp">
 
         <LinearLayout
             android:id="@+id/linearLayout"
@@ -134,18 +135,23 @@
                 app:summary="@string/backup_restore_summary"
                 app:title="@string/backup_restore_title" />
 
-            <View
+            <!-- FrameLayout so ExpressiveStyler doesn't turn the disclaimer into a header pill -->
+            <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="?android:attr/divider" />
+                android:layout_height="wrap_content">
 
-            <dev.octoshrimpy.quik.common.widget.QkTextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="24dp"
-                android:text="@string/backup_disclaimer"
-                android:textColor="?android:attr/textColorTertiary"
-                app:textSize="secondary" />
+                <dev.octoshrimpy.quik.common.widget.QkTextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="28dp"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginEnd="28dp"
+                    android:layout_marginBottom="16dp"
+                    android:text="@string/backup_disclaimer"
+                    android:textColor="?android:attr/textColorTertiary"
+                    app:textSize="secondary" />
+
+            </FrameLayout>
 
         </LinearLayout>
 

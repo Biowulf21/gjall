@@ -25,11 +25,25 @@
     android:background="?android:attr/windowBackground">
 
     <LinearLayout
+        android:id="@+id/drawerList"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:paddingTop="8dp"
         android:paddingBottom="8dp">
+
+        <!-- Expressive only: large app name header -->
+        <dev.octoshrimpy.quik.common.widget.QkTextView
+            android:id="@+id/drawerTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingStart="24dp"
+            android:paddingTop="24dp"
+            android:paddingEnd="24dp"
+            android:paddingBottom="12dp"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="28sp"
+            android:visibility="gone" />
 
         <LinearLayout
             android:id="@+id/inbox"
@@ -63,6 +77,21 @@
 
         </LinearLayout>
 
+        <LinearLayout
+            android:id="@+id/scheduled"
+            style="@style/DrawerRow">
+
+            <ImageView
+                style="@style/DrawerIcon"
+                android:src="@drawable/ic_event_black_24dp"
+                app:tint="?android:attr/textColorSecondary" />
+
+            <dev.octoshrimpy.quik.common.widget.QkTextView
+                style="@style/DrawerText"
+                android:text="@string/drawer_scheduled" />
+
+        </LinearLayout>
+
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
@@ -82,21 +111,6 @@
             <dev.octoshrimpy.quik.common.widget.QkTextView
                 style="@style/DrawerText"
                 android:text="@string/backup_title" />
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/scheduled"
-            style="@style/DrawerRow">
-
-            <ImageView
-                style="@style/DrawerIcon"
-                android:src="@drawable/ic_event_black_24dp"
-                app:tint="?android:attr/textColorSecondary" />
-
-            <dev.octoshrimpy.quik.common.widget.QkTextView
-                style="@style/DrawerText"
-                android:text="@string/drawer_scheduled" />
 
         </LinearLayout>
 

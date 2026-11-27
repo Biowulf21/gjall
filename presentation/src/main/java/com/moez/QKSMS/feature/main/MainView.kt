@@ -41,6 +41,8 @@ interface MainView : QkView<MainState> {
     val swipeConversationIntent: Observable<Pair<Long, Int>>
     val changelogMoreIntent: Observable<*>
     val undoArchiveIntent: Observable<Unit>
+    val undoDeleteIntent: Observable<List<Long>>
+    val commitDeleteIntent: Observable<List<Long>>
     val snackbarButtonIntent: Observable<Unit>
 
     fun requestDefaultSms()
@@ -54,6 +56,7 @@ interface MainView : QkView<MainState> {
     fun showRenameDialog(conversationName: String)
     fun showChangelog(changelog: ChangelogManager.CumulativeChangelog)
     fun showArchivedSnackbar(countConversationsArchived: Int, isArchiving: Boolean)
+    fun showDeletedSnackbar(threadIds: List<Long>)
     fun drawerToggled(opened: Boolean)
 }
 
