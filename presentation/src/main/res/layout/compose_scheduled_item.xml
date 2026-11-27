@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A scheduled message above the composer: an outgoing-side bubble, quieter than sent ones -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingStart="64dp"
+    android:paddingTop="2dp"
+    android:paddingEnd="12dp"
+    android:paddingBottom="2dp">
+
+    <LinearLayout
+        android:id="@+id/scheduledItemBubble"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:background="@drawable/message_only"
+        android:backgroundTint="?attr/bubbleColor"
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="?attr/selectableItemBackground"
+        android:orientation="vertical">
+
+        <dev.octoshrimpy.quik.common.widget.QkTextView
+            android:id="@+id/scheduledItemBody"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:textColor="?android:attr/textColorPrimary"
+            app:textSize="primary" />
+
+        <dev.octoshrimpy.quik.common.widget.QkTextView
+            android:id="@+id/scheduledItemTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:drawableStart="@drawable/ic_av_timer_black_24dp"
+            android:drawablePadding="4dp"
+            android:gravity="center_vertical"
+            android:textColor="?android:attr/textColorSecondary"
+            app:textSize="tertiary" />
+    </LinearLayout>
+</FrameLayout>

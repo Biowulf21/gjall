@@ -38,6 +38,9 @@ class PhoneNumberPickerAdapter @Inject constructor(
 
     val selectedItemChanges: Subject<Optional<Long>> = BehaviorSubject.create()
 
+    /** Called after a row is tapped (false) or long-pressed (true, remember as default) */
+    var picked: ((always: Boolean) -> Unit)? = null
+
     private var selectedItem: Long? = null
         set(value) {
             data.indexOfFirst { number -> number.id == field }.takeIf { it != -1 }?.run(::notifyItemChanged)
@@ -52,9 +55,15 @@ class PhoneNumberPickerAdapter @Inject constructor(
         return QkBindingViewHolder(binding).apply {
             binding.number.radioButton.forwardTouches(itemView)
 
+            // One tap picks the number; a long press also makes it the contact's default
             binding.root.setOnClickListener {
-                val phoneNumber = getItem(adapterPosition)
-                selectedItem = phoneNumber.id
+                selectedItem = getItem(adapterPosition).id
+                picked?.invoke(false)
+            }
+            binding.root.setOnLongClickListener {
+                selectedItem = getItem(adapterPosition).id
+                picked?.invoke(true)
+                true
             }
         }
     }

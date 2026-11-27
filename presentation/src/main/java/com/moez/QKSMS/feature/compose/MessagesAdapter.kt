@@ -35,6 +35,18 @@ import android.text.util.Linkify
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.content.res.ColorStateList
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.RippleDrawable
+import android.graphics.drawable.StateListDrawable
+import android.view.Gravity
+import android.widget.FrameLayout
+import android.widget.PopupMenu
+import androidx.core.view.isVisible
+import androidx.core.view.updatePaddingRelative
+import dev.octoshrimpy.quik.common.util.extensions.resolveThemeColor
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -101,6 +113,7 @@ class MessagesAdapter @Inject constructor(
         private const val VIEW_TYPE_MESSAGE_OUT = 1
 
         private const val MAX_MESSAGE_DISPLAY_LENGTH = 5000
+        private const val SELECT_CHECK = "selectCheck"
     }
 
     // click events passed back to compose view model
@@ -111,6 +124,8 @@ class MessagesAdapter @Inject constructor(
     val resendClicks: Subject<Long> = PublishSubject.create()
     val partContextMenuRegistrar: Subject<View> = PublishSubject.create()
     val reactionClicks: Subject<Long> = PublishSubject.create()
+    /** Actions picked from the tap menu, as compose menu ids (R.id.copy, R.id.forward, ...) */
+    val menuItemClicks: Subject<Int> = PublishSubject.create()
 
     var data: Pair<Conversation, RealmResults<Message>>? = null
         set(value) {
@@ -168,25 +183,64 @@ class MessagesAdapter @Inject constructor(
         // register recycler view with compose activity for context menus
         partContextMenuRegistrar.onNext(parts)
 
+        // Telegram-style selection: a check circle at the start and a flat full-width tint
+        (view as FrameLayout).addView(ImageView(parent.context).apply {
+            tag = SELECT_CHECK
+            visibility = View.GONE
+        }, FrameLayout.LayoutParams(22.dpToPx(context), 22.dpToPx(context),
+            Gravity.START or Gravity.CENTER_VERTICAL).apply { marginStart = 14.dpToPx(context) })
+        view.background = RippleDrawable(
+            ColorStateList.valueOf(context.resolveThemeColor(R.attr.colorControlHighlight)),
+            StateListDrawable().apply {
+                addState(intArrayOf(android.R.attr.state_activated), ColorDrawable(theme.theme.withAlpha(0x33)))
+            },
+            ColorDrawable(Color.WHITE))
+
         return QkViewHolder(view).apply {
+            // Tap: toggle while selecting, otherwise open the message's action menu
             view.setOnClickListener {
-                getItem(adapterPosition)?.let {
-                    when (toggleSelection(it.id, false)) {
-                        true -> view.isActivated = isSelected(it.id)
-                        false -> {
-                            expanded[it.id] = status.visibility != View.VISIBLE
-                            notifyItemChanged(adapterPosition)
-                        }
-                    }
-                }
+                val message = getItem(adapterPosition) ?: return@setOnClickListener
+                if (hasSelection) toggle(message.id, adapterPosition)
+                else showMenu(view, if (body.isVisible) body else parts, message.id, adapterPosition)
             }
+            // Long-press: start selecting. On an already-selected message its text is selectable,
+            // so a second long-press on the text selects words (Copy / Select all) natively
             view.setOnLongClickListener {
-                getItem(adapterPosition)?.let {
-                    toggleSelection(it.id)
-                    view.isActivated = isSelected(it.id)
+                getItem(adapterPosition)?.let { message -> toggle(message.id, adapterPosition) }
+                true
+            }
+        }
+    }
+
+    /** Toggles [id]; entering or leaving selection mode rebinds every row (checks, insets) */
+    private fun toggle(id: Long, position: Int) {
+        val wasSelecting = hasSelection
+        toggleSelection(id)
+        if (wasSelecting != hasSelection) notifyDataSetChanged() else notifyItemChanged(position)
+    }
+
+    private fun showMenu(row: View, anchor: View, id: Long, position: Int) {
+        row.isActivated = true
+        var keepSelection = false
+        PopupMenu(row.context, anchor).apply {
+            menu.add(0, R.id.copy, 0, R.string.compose_menu_copy)
+            menu.add(0, R.id.forward, 1, R.string.compose_menu_forward)
+            menu.add(0, R.id.share, 2, R.string.compose_menu_share)
+            menu.add(0, R.id.select_message, 3, R.string.compose_menu_select)
+            menu.add(0, R.id.details, 4, R.string.compose_details_title)
+            menu.add(0, R.id.delete, 5, R.string.compose_menu_delete)
+            setOnMenuItemClickListener { item ->
+                keepSelection = true
+                if (item.itemId == R.id.select_message) {
+                    toggle(id, position)
+                } else {
+                    toggleSelection(id) // the compose actions read the current selection
+                    menuItemClicks.onNext(item.itemId)
                 }
                 true
             }
+            setOnDismissListener { if (!keepSelection) row.isActivated = isSelected(id) }
+            show()
         }
     }
 
@@ -202,6 +256,24 @@ class MessagesAdapter @Inject constructor(
 
         // Update the selected state
         holder.itemView.isActivated = isSelected(message.id) || highlight == message.id
+        holder.itemView.updatePaddingRelative(start = if (hasSelection) 44.dpToPx(context) else 0)
+        holder.itemView.findViewWithTag<ImageView>(SELECT_CHECK)?.apply {
+            isVisible = hasSelection
+            if (isSelected(message.id)) {
+                setImageResource(R.drawable.ic_check_white_24dp)
+                imageTintList = ColorStateList.valueOf(theme.textPrimary)
+                background = GradientDrawable().apply {
+                    shape = GradientDrawable.OVAL
+                    setColor(theme.theme)
+                }
+                3.dpToPx(context).let { setPadding(it, it, it, it) }
+            } else {
+                setImageResource(R.drawable.ic_radio_button_unchecked_black_24dp)
+                imageTintList = ColorStateList.valueOf(context.resolveThemeColor(android.R.attr.textColorSecondary))
+                background = null
+                setPadding(0, 0, 0, 0)
+            }
+        }
 
         // Get views based on message type
         val isOutgoing = message.isMe()
@@ -296,11 +368,11 @@ class MessagesAdapter @Inject constructor(
             body.apply {
                 setTextColor(theme.textPrimary)
                 setBackgroundTint(theme.theme)
-                highlightColor = R.attr.bubbleColor.withAlpha(0x5d)
+                highlightColor = theme.textPrimary.withAlpha(0x5d)
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    textSelectHandle?.setTint(R.attr.bubbleColor.withAlpha(0x7d))
-                    textSelectHandleLeft?.setTint(R.attr.bubbleColor.withAlpha(0x7d))
-                    textSelectHandleRight?.setTint(R.attr.bubbleColor.withAlpha(0x7d))
+                    textSelectHandle?.setTint(theme.theme)
+                    textSelectHandleLeft?.setTint(theme.theme)
+                    textSelectHandleRight?.setTint(theme.theme)
                 }
             }
         }
@@ -365,6 +437,11 @@ class MessagesAdapter @Inject constructor(
             }
         )
 
+        if (body.isTextSelectable) {
+            body.setTextIsSelectable(false)
+            body.setOnClickListener(null)
+        }
+
         val spanString = SpannableStringBuilder(displayText)
 
         when (prefs.messageLinkHandling.get()) {
@@ -414,6 +491,13 @@ class MessagesAdapter @Inject constructor(
                     isMe = message.isMe()
                 )
             )
+
+            // A selected message's text is selectable for the second long-press (word selection);
+            // taps on it still toggle the row
+            if (isSelected(message.id) && spanString.isNotBlank()) {
+                setTextIsSelectable(true)
+                setOnClickListener { holder.itemView.performClick() }
+            }
         }
 
         // Bind the parts

@@ -48,8 +48,12 @@ data class ComposeState(
     val subscription: SubscriptionInfoCompat? = null,
     val canSend: Boolean = false,
     val hasScheduledMessages: Boolean = false,
+    val scheduledItems: List<ScheduledItem> = listOf(),
     val validRecipientNumbers: Int = 1,
     val recipientCount: Int = 1,
     val audioMsgRecording: Boolean = false,
     val saveDraft: Boolean = true,
 )
+
+/** This conversation's scheduled messages, shown above the composer (unmanaged copies) */
+data class ScheduledItem(val id: Long, val date: Long, val body: String)

@@ -33,7 +33,13 @@ class AlarmManagerImpl @Inject constructor(private val context: Context) : Alarm
 
     override fun setAlarm(date: Long, intent: PendingIntent) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as android.app.AlarmManager
-        alarmManager.setExactAndAllowWhileIdle(android.app.AlarmManager.RTC_WAKEUP, date, intent)
+        // USE_EXACT_ALARM (API 33+) keeps this exact; without any exact-alarm grant (an Android 12
+        // install that revoked it) fall back rather than crash with a SecurityException
+        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.S || alarmManager.canScheduleExactAlarms()) {
+            alarmManager.setExactAndAllowWhileIdle(android.app.AlarmManager.RTC_WAKEUP, date, intent)
+        } else {
+            alarmManager.setAndAllowWhileIdle(android.app.AlarmManager.RTC_WAKEUP, date, intent)
+        }
     }
 
 }

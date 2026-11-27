@@ -67,6 +67,8 @@ interface ComposeView : QkView<ComposeState> {
     val contactSelectedIntent: Observable<Uri>
     val inputContentIntent: Observable<InputContentInfoCompat>
     val scheduleSelectedIntent: Observable<Long>
+    /** (R.id.send_now | R.id.edit_message | R.id.delete) to a scheduled message id */
+    val scheduledMessageActionIntent: Observable<Pair<Int, Long>>
     val scheduleCancelIntent: Observable<*>
     val changeSimIntent: Observable<*>
     val sendIntent: Observable<Unit>

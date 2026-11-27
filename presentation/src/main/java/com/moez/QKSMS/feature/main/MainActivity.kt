@@ -114,7 +114,6 @@ class MainActivity : QkThemedActivity(), MainView {
                 binding.drawer.inbox.clicks().map { NavItem.INBOX },
                 binding.drawer.archived.clicks().map { NavItem.ARCHIVED },
                 binding.drawer.backup.clicks().map { NavItem.BACKUP },
-                binding.drawer.scheduled.clicks().map { NavItem.SCHEDULED },
                 binding.drawer.blocking.clicks().map { NavItem.BLOCKING },
                 binding.drawer.messageUtils.clicks().map { NavItem.MESSAGE_UTILS },
                 binding.drawer.settings.clicks().map { NavItem.SETTINGS },

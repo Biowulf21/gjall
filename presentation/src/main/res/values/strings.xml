@@ -129,6 +129,7 @@
     <string name="compose_number_picker_default">%s ∙ Default</string>
     <string name="compose_number_picker_once">Just once</string>
     <string name="compose_number_picker_always">Always</string>
+    <string name="compose_number_picker_hint">%s · Long-press a number to always use it</string>
     <string name="compose_title_selected">%d selected</string>
     <string name="compose_subtitle_results">%1$d of %2$d results</string>
     <string name="compose_send_group_title">Send as group message</string>
@@ -145,6 +146,9 @@
     <string name="compose_menu_copy">Copy text</string>
     <string name="compose_menu_share">Share text</string>
     <string name="compose_menu_forward">Forward</string>
+    <string name="compose_menu_select">Select</string>
+    <string name="compose_scheduled_delete_title">Delete this scheduled message?</string>
+    <string name="compose_send_hint_cd">Send. Long-press to schedule</string>
     <string name="compose_menu_show_status">Show status</string>
     <string name="compose_menu_delete">Delete</string>
     <string name="compose_menu_previous">Previous</string>

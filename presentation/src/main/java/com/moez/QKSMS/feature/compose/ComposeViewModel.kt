@@ -118,6 +118,8 @@ class ComposeViewModel @Inject constructor(
     private val messageDetailsFormatter: MessageDetailsFormatter,
     private val messageRepo: MessageRepository,
     private val scheduledMessageRepo: ScheduledMessageRepository,
+    private val sendScheduledMessage: dev.octoshrimpy.quik.interactor.SendScheduledMessage,
+    private val deleteScheduledMessages: dev.octoshrimpy.quik.interactor.DeleteScheduledMessages,
     private val navigator: Navigator,
     private val externalNavigator: ExternalNavigator,
     private val permissionManager: PermissionManager,
@@ -301,7 +303,9 @@ class ComposeViewModel @Inject constructor(
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe { liveResults ->
                 val hasAny = liveResults.isNotEmpty()
-                newState { copy(hasScheduledMessages = hasAny) }
+                val items = liveResults.filter { it.isValid }.sortedBy { it.date }
+                    .map { ScheduledItem(it.id, it.date, it.body) }
+                newState { copy(hasScheduledMessages = hasAny, scheduledItems = items) }
             }
 
         // actions
@@ -873,6 +877,30 @@ class ComposeViewModel @Inject constructor(
                 }
                 .autoDisposable(view.scope())
                 .subscribe { scheduled -> newState { copy(scheduled = scheduled) } }
+
+        // Actions on the scheduled messages shown above the composer
+        view.scheduledMessageActionIntent
+                .observeOn(Schedulers.io())
+                .autoDisposable(view.scope())
+                .subscribe { (action, id) ->
+                    when (action) {
+                        R.id.send_now -> sendScheduledMessage.execute(id)
+                        R.id.delete -> deleteScheduledMessages.execute(listOf(id))
+                        R.id.edit_message -> scheduledMessageRepo.getScheduledMessage(id)?.let { message ->
+                            // Back into this composer with its time, then drop the original
+                            val body = message.body
+                            val date = message.date
+                            val uris = message.attachments.map(Uri::parse)
+                            scheduledMessageRepo.deleteScheduledMessage(id)
+                            AndroidSchedulers.mainThread().scheduleDirect {
+                                view.setDraft(body)
+                                newState {
+                                    copy(scheduled = date, attachments = attachments + uris.map { Attachment(context, it) })
+                                }
+                            }
+                        }
+                    }
+                }
 
         // Attach a contact
         view.attachContactIntent

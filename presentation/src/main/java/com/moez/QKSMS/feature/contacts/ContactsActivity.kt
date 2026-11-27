@@ -21,7 +21,6 @@ package dev.octoshrimpy.quik.feature.contacts
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
-import androidx.activity.OnBackPressedCallback
 import androidx.core.view.isVisible
 import androidx.lifecycle.ViewModelProviders
 import com.jakewharton.rxbinding2.view.clicks
@@ -75,10 +74,8 @@ class ContactsActivity : QkThemedActivity(), ContactsContract {
         QkDialog(this).apply {
             titleRes = R.string.compose_number_picker_title
             adapter = phoneNumberAdapter
-            positiveButton = R.string.compose_number_picker_always
-            positiveButtonListener = { phoneNumberActionIntent.onNext(PhoneNumberAction.ALWAYS) }
-            negativeButton = R.string.compose_number_picker_once
-            negativeButtonListener = { phoneNumberActionIntent.onNext(PhoneNumberAction.JUST_ONCE) }
+            negativeButton = android.R.string.cancel
+            negativeButtonListener = { cancel() } // back to the contact list, not out of the picker
             cancelListener = { phoneNumberActionIntent.onNext(PhoneNumberAction.CANCEL) }
         }
     }
@@ -86,6 +83,9 @@ class ContactsActivity : QkThemedActivity(), ContactsContract {
     override fun onCreate(savedInstanceState: Bundle?) {
         AndroidInjection.inject(this)
         super.onCreate(savedInstanceState)
+        phoneNumberAdapter.picked = { always ->
+            phoneNumberActionIntent.onNext(if (always) PhoneNumberAction.ALWAYS else PhoneNumberAction.JUST_ONCE)
+        }
         binding = ContactsActivityBinding.inflate(layoutInflater)
         setContentView(binding.root)
         showBackButton(true)
@@ -97,13 +97,6 @@ class ContactsActivity : QkThemedActivity(), ContactsContract {
                 accent = colors.theme().theme,
                 ink = colors.theme().textPrimary,
                 muted = resolveThemeColor(android.R.attr.textColorSecondary))
-
-        val callback = object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                navigator.showMainActivity()
-            }
-        }
-        onBackPressedDispatcher.addCallback(this, callback)
     }
 
     override fun render(state: ContactsState) {
@@ -114,7 +107,7 @@ class ContactsActivity : QkThemedActivity(), ContactsContract {
 
         if (state.selectedContact != null && !phoneNumberDialog.isShowing) {
             phoneNumberAdapter.data = state.selectedContact.numbers
-            phoneNumberDialog.subtitle = state.selectedContact.name
+            phoneNumberDialog.subtitle = getString(R.string.compose_number_picker_hint, state.selectedContact.name)
             phoneNumberDialog.show()
         } else if (state.selectedContact == null && phoneNumberDialog.isShowing) {
             phoneNumberDialog.dismiss()

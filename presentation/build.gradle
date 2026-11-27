@@ -29,8 +29,8 @@ android {
         resValue("string", "application_id", applicationId)
         minSdkVersion 23
         targetSdkVersion 33
-        versionCode 2243
-        versionName '4.6.0'
+        versionCode 2244
+        versionName '4.7.0'
         setProperty("archivesBaseName", "Gjall-v${versionName}")
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }

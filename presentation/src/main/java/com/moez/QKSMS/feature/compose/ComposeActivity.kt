@@ -18,6 +18,10 @@
  */
 package dev.octoshrimpy.quik.feature.compose
 
+import dev.octoshrimpy.quik.common.util.ClipboardUtils
+import dev.octoshrimpy.quik.common.util.extensions.resolveThemeColor
+import android.widget.TextView
+import android.widget.PopupMenu
 import android.Manifest
 import android.animation.LayoutTransition
 import android.app.Activity
@@ -57,6 +61,7 @@ import androidx.lifecycle.ViewModelProviders
 import com.google.android.flexbox.FlexboxLayoutManager
 import com.google.android.material.snackbar.Snackbar
 import com.jakewharton.rxbinding2.view.clicks
+import com.jakewharton.rxbinding2.view.longClicks
 import com.jakewharton.rxbinding2.widget.textChanges
 import com.moez.QKSMS.common.QkMediaPlayer
 import com.uber.autodispose.ObservableSubscribeProxy
@@ -128,7 +133,11 @@ class ComposeActivity : QkThemedActivity(), ComposeView {
     override val cameraIntent: Observable<Unit> by lazy { Observable.merge(binding.camera.clicks(), binding.cameraLabel.clicks()) }
     override val attachImageFileIntent: Observable<Unit> by lazy { Observable.merge(binding.gallery.clicks(), binding.galleryLabel.clicks()) }
     override val attachAnyFileIntent: Observable<Unit> by lazy { Observable.merge(binding.attachAFileIcon.clicks(), binding.attachAFileLabel.clicks()) }
-    override val scheduleIntent: Observable<Unit> by lazy { Observable.merge(binding.schedule.clicks(), binding.scheduleLabel.clicks()) }
+    // Long-pressing send schedules the message (the small clock badge on send hints at it)
+    override val scheduleIntent: Observable<Unit> by lazy {
+        Observable.merge(binding.schedule.clicks(), binding.scheduleLabel.clicks(), binding.send.longClicks())
+    }
+    override val scheduledMessageActionIntent: Subject<Pair<Int, Long>> = PublishSubject.create()
     override val attachContactIntent: Observable<Unit> by lazy { Observable.merge(binding.contact.clicks(), binding.contactLabel.clicks()) }
     override val attachAnyFileSelectedIntent: Subject<Uri> = PublishSubject.create()
     override val contactSelectedIntent: Subject<Uri> = PublishSubject.create()
@@ -254,6 +263,7 @@ class ComposeActivity : QkThemedActivity(), ComposeView {
 
             binding.messageList.setHasFixedSize(true)
             binding.messageList.adapter = messageAdapter
+            messageAdapter.menuItemClicks.autoDisposable(scope()).subscribe(optionsItemIntent::onNext)
 
             binding.messageAttachments.adapter = composeAttachmentAdapter
 
@@ -481,8 +491,8 @@ class ComposeActivity : QkThemedActivity(), ComposeView {
         // Don't set the adapters unless needed
         if (state.editingMode && binding.chips.adapter == null) binding.chips.adapter = chipsAdapter
 
-        binding.toolbar.menu.findItem(R.id.viewScheduledMessages)?.isVisible = !state.editingMode && state.selectedMessages == 0
-                && state.query.isEmpty() && state.hasScheduledMessages
+        // Scheduled messages now live inline above the composer, not on their own page
+        binding.toolbar.menu.findItem(R.id.viewScheduledMessages)?.isVisible = false
         binding.toolbar.menu.findItem(R.id.select_all)?.isVisible = !state.editingMode && (messageAdapter.itemCount > 1) && state.selectedMessages != 0
         binding.toolbar.menu.findItem(R.id.add)?.isVisible = state.editingMode
         binding.toolbar.menu.findItem(R.id.call)?.isVisible = !state.editingMode && state.selectedMessages == 0
@@ -555,6 +565,8 @@ class ComposeActivity : QkThemedActivity(), ComposeView {
         binding.send.visibility = if (state.canSend && !state.loading && state.scheduled == 0L) View.VISIBLE else View.INVISIBLE
         binding.recordAudioMsg.visibility = if (state.canSend && !state.loading) View.INVISIBLE else View.VISIBLE
         binding.scheduledSend.visibility = if (state.canSend && (state.scheduled != 0L) && !state.loading) View.VISIBLE else View.INVISIBLE
+        binding.sendScheduleHint.visibility = binding.send.visibility
+        renderScheduledItems(state.scheduledItems)
 
         // if not in editing mode, and there are no non-me participants that can be sent to,
         // hide controls that allow constructing a reply and inform user no valid recipients
@@ -650,6 +662,50 @@ class ComposeActivity : QkThemedActivity(), ComposeView {
             Manifest.permission.SEND_SMS), 0)
     }
 
+    private var renderedScheduled: List<ScheduledItem>? = null
+
+    /** This conversation's scheduled messages as quiet outgoing bubbles above the composer */
+    private fun renderScheduledItems(items: List<ScheduledItem>) {
+        if (items == renderedScheduled) return
+        renderedScheduled = items
+        val list = binding.scheduledList
+        list.removeAllViews()
+        list.isVisible = items.isNotEmpty()
+        val secondary = resolveThemeColor(android.R.attr.textColorSecondary)
+        items.forEach { item ->
+            val row = layoutInflater.inflate(R.layout.compose_scheduled_item, list, false)
+            row.findViewById<TextView>(R.id.scheduledItemTime).apply {
+                text = dateFormatter.getScheduledTimestamp(item.date)
+                compoundDrawableTintList = ColorStateList.valueOf(secondary)
+            }
+            row.findViewById<TextView>(R.id.scheduledItemBody).text = item.body
+            row.findViewById<View>(R.id.scheduledItemBubble).setOnClickListener { bubble ->
+                PopupMenu(this, bubble).apply {
+                    menu.add(0, R.id.send_now, 0, R.string.scheduled_menu_send_now)
+                    menu.add(0, R.id.edit_message, 1, R.string.scheduled_menu_edit_message)
+                    menu.add(0, R.id.copy, 2, R.string.compose_menu_copy)
+                    menu.add(0, R.id.delete, 3, R.string.compose_menu_delete)
+                    setOnMenuItemClickListener { menuItem ->
+                        when (menuItem.itemId) {
+                            R.id.copy -> ClipboardUtils.copy(this@ComposeActivity, item.body)
+                            R.id.delete -> AlertDialog.Builder(this@ComposeActivity)
+                                .setTitle(R.string.compose_scheduled_delete_title)
+                                .setPositiveButton(R.string.compose_menu_delete) { _, _ ->
+                                    scheduledMessageActionIntent.onNext(R.id.delete to item.id)
+                                }
+                                .setNegativeButton(android.R.string.cancel, null)
+                                .show()
+                            else -> scheduledMessageActionIntent.onNext(menuItem.itemId to item.id)
+                        }
+                        true
+                    }
+                    show()
+                }
+            }
+            list.addView(row)
+        }
+    }
+
     override fun requestDatePicker() {
         val calendar = Calendar.getInstance()
         DatePickerDialog(this, { _, year, month, day ->
@@ -659,6 +715,8 @@ class ComposeActivity : QkThemedActivity(), ComposeView {
                 calendar.set(Calendar.DAY_OF_MONTH, day)
                 calendar.set(Calendar.HOUR_OF_DAY, hour)
                 calendar.set(Calendar.MINUTE, minute)
+                calendar.set(Calendar.SECOND, 0) // fire on the minute picked, not up to 59s later
+                calendar.set(Calendar.MILLISECOND, 0)
                 scheduleSelectedIntent.onNext(calendar.timeInMillis)
             }, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), DateFormat.is24HourFormat(this))
                 .show()
@@ -810,6 +868,10 @@ class ComposeActivity : QkThemedActivity(), ComposeView {
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        // Backed out of the contact picker: an empty map closes a compose with no recipients yet,
+        // otherwise it just returns here
+        if (resultCode != Activity.RESULT_OK && requestCode == ComposeView.SELECT_CONTACT_REQUEST_CODE)
+            return chipsSelectedIntent.onNext(hashMapOf())
         if (resultCode != Activity.RESULT_OK)
             return
 

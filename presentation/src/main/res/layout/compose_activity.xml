@@ -69,12 +69,24 @@
         android:layout_marginBottom="12dp"
         android:paddingTop="8dp"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        app:layout_constraintBottom_toTopOf="@id/messageBackground"
+        app:layout_constraintBottom_toTopOf="@id/scheduledList"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/sendAsGroupBackground"
         app:stackFromEnd="true"
         tools:listitem="@layout/message_list_item_in" />
+
+    <!-- This conversation's scheduled messages, built in ComposeActivity.renderScheduledItems -->
+    <LinearLayout
+        android:id="@+id/scheduledList"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:orientation="vertical"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/messageBackground"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <dev.octoshrimpy.quik.common.widget.QkTextView
         android:id="@+id/messagesEmpty"
@@ -339,7 +351,7 @@
         android:layout_height="44dp"
         android:layout_marginEnd="8dp"
         android:background="?android:attr/selectableItemBackgroundBorderless"
-        android:contentDescription="@string/compose_send_cd"
+        android:contentDescription="@string/compose_send_hint_cd"
         android:padding="10dp"
         android:src="@drawable/ic_send_black_24dp"
         android:visibility="invisible"
@@ -347,6 +359,21 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:tint="?android:textColorSecondary"
         tools:visibility="visible" />
+
+    <!-- Tiny clock on send: long-press it to schedule -->
+    <ImageView
+        android:id="@+id/sendScheduleHint"
+        android:layout_width="14dp"
+        android:layout_height="14dp"
+        android:background="@drawable/circle"
+        android:backgroundTint="?android:attr/colorBackground"
+        android:importantForAccessibility="no"
+        android:padding="1dp"
+        android:src="@drawable/ic_av_timer_black_24dp"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="@id/send"
+        app:layout_constraintEnd_toEndOf="@id/send"
+        app:tint="?android:attr/textColorSecondary" />
 
     <ImageView
         android:id="@+id/scheduledSend"
