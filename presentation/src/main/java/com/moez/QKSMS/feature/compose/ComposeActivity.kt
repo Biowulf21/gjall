@@ -493,6 +493,11 @@ class ComposeActivity : QkThemedActivity(), ComposeView {
 
         // Scheduled messages now live inline above the composer, not on their own page
         binding.toolbar.menu.findItem(R.id.viewScheduledMessages)?.isVisible = false
+        // Selecting: close (X) instead of back, like Telegram
+        if ((state.selectedMessages > 0) != showingClose) {
+            showingClose = state.selectedMessages > 0
+            supportActionBar?.setHomeAsUpIndicator(if (showingClose) closeIcon else null) // null: theme's back arrow
+        }
         binding.toolbar.menu.findItem(R.id.select_all)?.isVisible = !state.editingMode && (messageAdapter.itemCount > 1) && state.selectedMessages != 0
         binding.toolbar.menu.findItem(R.id.add)?.isVisible = state.editingMode
         binding.toolbar.menu.findItem(R.id.call)?.isVisible = !state.editingMode && state.selectedMessages == 0
@@ -595,7 +600,9 @@ class ComposeActivity : QkThemedActivity(), ComposeView {
             scheduleAction.onNext(true)
 
         // if stt is available and preference is set to show stt button
-        if (isSpeechRecognitionAvailable() && prefs.showStt.get()) {
+        // (hidden while selecting messages, where it only covers them)
+        binding.speechToTextFrame.isVisible = false
+        if (isSpeechRecognitionAvailable() && prefs.showStt.get() && state.selectedMessages == 0) {
             binding.speechToTextFrame.isVisible = true
 
             val xPercent = prefs.showSttOffsetX.get()
@@ -663,6 +670,11 @@ class ComposeActivity : QkThemedActivity(), ComposeView {
     }
 
     private var renderedScheduled: List<ScheduledItem>? = null
+    private var showingClose = false
+    private val closeIcon by lazy {
+        ContextCompat.getDrawable(this, R.drawable.ic_close_black_24dp)?.mutate()
+            ?.apply { setTint(resolveThemeColor(android.R.attr.textColorPrimary)) }
+    }
 
     /** This conversation's scheduled messages as quiet outgoing bubbles above the composer */
     private fun renderScheduledItems(items: List<ScheduledItem>) {

@@ -41,11 +41,13 @@ import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.RippleDrawable
 import android.graphics.drawable.StateListDrawable
+import android.text.Selection
+import android.text.Spanned
 import android.view.Gravity
+import androidx.core.view.updateLayoutParams
 import android.widget.FrameLayout
 import android.widget.PopupMenu
 import androidx.core.view.isVisible
-import androidx.core.view.updatePaddingRelative
 import dev.octoshrimpy.quik.common.util.extensions.resolveThemeColor
 import android.widget.ImageView
 import android.widget.ProgressBar
@@ -188,7 +190,7 @@ class MessagesAdapter @Inject constructor(
             tag = SELECT_CHECK
             visibility = View.GONE
         }, FrameLayout.LayoutParams(22.dpToPx(context), 22.dpToPx(context),
-            Gravity.START or Gravity.CENTER_VERTICAL).apply { marginStart = 14.dpToPx(context) })
+            Gravity.START or Gravity.CENTER_VERTICAL).apply { marginStart = 12.dpToPx(context) })
         view.background = RippleDrawable(
             ColorStateList.valueOf(context.resolveThemeColor(R.attr.colorControlHighlight)),
             StateListDrawable().apply {
@@ -197,6 +199,7 @@ class MessagesAdapter @Inject constructor(
             ColorDrawable(Color.WHITE))
 
         return QkViewHolder(view).apply {
+            forwardTouches(body, view)
             // Tap: toggle while selecting, otherwise open the message's action menu
             view.setOnClickListener {
                 val message = getItem(adapterPosition) ?: return@setOnClickListener
@@ -210,6 +213,20 @@ class MessagesAdapter @Inject constructor(
                 true
             }
         }
+    }
+
+    /**
+     * The body text is clickable on its own (link movement method), so without this a tap or
+     * long-press on the bubble never reaches the row. A tap that landed on a link stays a link tap.
+     */
+    private fun forwardTouches(body: TextView, row: View) {
+        body.setOnClickListener {
+            val text = body.text
+            val onLink = text is Spanned && Selection.getSelectionStart(text) != Selection.getSelectionEnd(text) &&
+                    !body.isTextSelectable
+            if (!onLink) row.performClick()
+        }
+        body.setOnLongClickListener { row.performLongClick() }
     }
 
     /** Toggles [id]; entering or leaving selection mode rebinds every row (checks, insets) */
@@ -256,7 +273,12 @@ class MessagesAdapter @Inject constructor(
 
         // Update the selected state
         holder.itemView.isActivated = isSelected(message.id) || highlight == message.id
-        holder.itemView.updatePaddingRelative(start = if (hasSelection) 44.dpToPx(context) else 0)
+        // Telegram-style: incoming bubbles (and avatars) slide right of the check; outgoing stay put
+        if (!message.isMe()) {
+            (holder.itemView as ViewGroup).getChildAt(0).updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                marginStart = if (hasSelection) 40.dpToPx(context) else 0
+            }
+        }
         holder.itemView.findViewWithTag<ImageView>(SELECT_CHECK)?.apply {
             isVisible = hasSelection
             if (isSelected(message.id)) {
@@ -439,7 +461,7 @@ class MessagesAdapter @Inject constructor(
 
         if (body.isTextSelectable) {
             body.setTextIsSelectable(false)
-            body.setOnClickListener(null)
+            forwardTouches(body, holder.itemView)
         }
 
         val spanString = SpannableStringBuilder(displayText)
@@ -496,7 +518,7 @@ class MessagesAdapter @Inject constructor(
             // taps on it still toggle the row
             if (isSelected(message.id) && spanString.isNotBlank()) {
                 setTextIsSelectable(true)
-                setOnClickListener { holder.itemView.performClick() }
+                setOnLongClickListener(null) // let the TextView start word selection natively
             }
         }
 
