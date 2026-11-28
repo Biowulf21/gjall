@@ -22,6 +22,11 @@ import android.Manifest
 import android.animation.ObjectAnimator
 import android.content.Intent
 import android.content.res.ColorStateList
+import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
+import android.text.TextUtils
+import android.widget.ImageView
+import android.widget.TextView
 import android.os.Build
 import android.os.Bundle
 import android.view.Gravity
@@ -205,17 +210,7 @@ class MainActivity : QkThemedActivity(), MainView {
                 .setTopRightCornerSize(28.dpToPx(this).toFloat())
                 .setBottomRightCornerSize(28.dpToPx(this).toFloat())
                 .build()).apply { fillColor = ColorStateList.valueOf(resolveThemeColor(R.attr.colorSurfaceContainerLow)) }
-            binding.drawer.drawerTitle.setVisible(true)
-            binding.drawer.drawerTitle.setTag(R.id.expressive_styled, true) // a title, not a section pill
-            binding.drawer.drawerTitle.setText(if (prefs.brandLauncherName.get()) R.string.app_name else R.string.launcher_name)
-            binding.drawer.drawerList.setTag(R.id.expressive_rows, true)
-            binding.drawer.drawerList.children.filter { it.isClickable && it is ViewGroup }.forEach { row ->
-                row.updateLayoutParams { height = 56.dpToPx(this@MainActivity) }
-                row.setPaddingRelative(4.dpToPx(this), 0, 16.dpToPx(this), 0)
-                (row as ViewGroup).getChildAt(0).updateLayoutParams<ViewGroup.MarginLayoutParams> {
-                    marginEnd = 16.dpToPx(this@MainActivity)
-                }
-            }
+            styleExpressiveDrawer()
             ConversationGroupDecoration(this).attachTo(binding.recyclerView)
         }
 
@@ -237,7 +232,8 @@ class MainActivity : QkThemedActivity(), MainView {
                     ColorStateList(states, intArrayOf(theme.theme,
                         resolveThemeColor(android.R.attr.textColorSecondary)
                     ))
-                        .let { tintList ->
+                        .takeUnless { expressive } // expressive badges carry their own state colours
+                        ?.let { tintList ->
                             binding.drawer.inboxIcon.imageTintList = tintList
                             binding.drawer.archivedIcon.imageTintList = tintList
                         }
@@ -254,6 +250,67 @@ class MainActivity : QkThemedActivity(), MainView {
                 binding.compose.setTint(theme.textPrimary)
 
                 }
+    }
+
+    /**
+     * Same drawer spec as Heimdall's HomeDrawer: a 28sp title on the badge edge, then grouped
+     * 56dp cards (rows themselves come from ExpressiveStyler) with a 40dp round badge, a 16sp
+     * medium label, and the selected row filled so its badge melts into it.
+     */
+    private fun styleExpressiveDrawer() {
+        val dp = { value: Int -> value.dpToPx(this) }
+        val activated = arrayOf(intArrayOf(android.R.attr.state_activated), intArrayOf())
+        fun stateful(on: Int, off: Int) =
+            ColorStateList(activated, intArrayOf(resolveThemeColor(on), resolveThemeColor(off)))
+
+        binding.drawer.drawerTitle.apply {
+            setVisible(true)
+            setTag(R.id.expressive_styled, true) // a title, not a section pill
+            setText(if (prefs.brandLauncherName.get()) R.string.app_name else R.string.launcher_name)
+            setTextColor(resolveThemeColor(R.attr.colorOnSurface))
+            textSize = 28f
+            setPaddingRelative(dp(28), dp(32), dp(28), dp(16))
+        }
+        binding.drawer.drawerList.setTag(R.id.expressive_rows, true)
+        binding.drawer.drawerList.children.filter { it.isClickable && it is ViewGroup }.forEach { row ->
+            row as ViewGroup
+            row.updateLayoutParams { height = dp(56) }
+            row.setPaddingRelative(0, 0, dp(24), 0)
+            row.children.filterIsInstance<ImageView>().firstOrNull()?.let { icon ->
+                icon.setTag(R.id.expressive_styled, true) // ExpressiveStyler would paint a static badge
+                icon.background = GradientDrawable().apply {
+                    shape = GradientDrawable.OVAL
+                    setColor(stateful(R.attr.colorSecondaryContainer, R.attr.colorSurfaceContainerHighest))
+                }
+                icon.imageTintList = stateful(R.attr.colorOnSecondaryContainer, R.attr.colorOnSurfaceVariant)
+                dp(8).let { icon.setPadding(it, it, it, it) }
+                icon.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                    width = dp(40)
+                    height = width
+                    marginStart = dp(16)
+                    marginEnd = dp(16)
+                }
+            }
+            row.children.filterIsInstance<TextView>().firstOrNull()?.apply {
+                textSize = 16f
+                // Medium weight in the user's chosen font family where the platform allows it
+                typeface = if (Build.VERSION.SDK_INT >= 28) Typeface.create(typeface, 500, false)
+                else Typeface.create("sans-serif-medium", Typeface.NORMAL)
+                setTextColor(stateful(R.attr.colorOnSecondaryContainer, R.attr.colorOnSurface))
+                ellipsize = TextUtils.TruncateAt.END
+            }
+        }
+        // Rating prompt: a plain tonal card in the drawer's shape language instead of an outline
+        binding.drawer.rateLayout.apply {
+            background = MaterialShapeDrawable(ShapeAppearanceModel.builder().setAllCornerSizes(dp(28).toFloat()).build())
+                .apply { fillColor = ColorStateList.valueOf(resolveThemeColor(R.attr.colorSurfaceContainerHigh)) }
+            backgroundTintList = null
+            updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                marginStart = dp(12)
+                marginEnd = dp(12)
+                topMargin = dp(12)
+            }
+        }
     }
 
     override fun onNewIntent(intent: Intent?) =
